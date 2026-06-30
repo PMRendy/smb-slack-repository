@@ -1,7 +1,7 @@
 {
-  "name": "smb-slack-proxy",
+  "name": "smb-bingo-backend",
   "version": "1.0.0",
-  "description": "Slack webhook CORS proxy for SMB Bayaning Puyat BINGO",
+  "description": "Shared game-state backend + Slack proxy for SMB Bayaning Puyat BINGO",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
