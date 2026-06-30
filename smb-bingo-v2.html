@@ -1,0 +1,1794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SMB Bayaning Puyat BINGO v2 🌙</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap');
+:root {
+  --navy:#0D1B2A; --deep:#112240; --card-bg:#1a2f4a; --panel:#16293f;
+  --gold:#F5C842; --gold2:#c9a227; --teal:#2ECAD5; --teal2:#1a9aa3;
+  --white:#EEF2F7; --muted:#7a92b0; --danger:#e05c5c; --success:#4ecb84;
+  --purple:#9b7fe8; --r:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--navy);color:var(--white);font-family:'Inter',sans-serif;min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;background-image:
+  radial-gradient(1px 1px at 10% 20%,rgba(255,255,255,.4) 0%,transparent 100%),
+  radial-gradient(1px 1px at 30% 60%,rgba(255,255,255,.3) 0%,transparent 100%),
+  radial-gradient(1px 1px at 50% 10%,rgba(255,255,255,.5) 0%,transparent 100%),
+  radial-gradient(1px 1px at 70% 80%,rgba(255,255,255,.3) 0%,transparent 100%),
+  radial-gradient(1px 1px at 85% 35%,rgba(255,255,255,.4) 0%,transparent 100%),
+  radial-gradient(1px 1px at 20% 90%,rgba(255,255,255,.2) 0%,transparent 100%),
+  radial-gradient(1px 1px at 60% 50%,rgba(255,255,255,.3) 0%,transparent 100%),
+  radial-gradient(1px 1px at 90% 15%,rgba(255,255,255,.4) 0%,transparent 100%);
+  pointer-events:none;z-index:0;}
+
+/* ── SCREENS ── */
+.screen{display:none;position:relative;z-index:1;min-height:100vh;}
+.screen.active{display:block;}
+
+/* ── LANDING ── */
+#screen-landing{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:20px;text-align:center;}
+#screen-landing h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(52px,10vw,96px);letter-spacing:6px;color:var(--gold);text-shadow:0 0 40px rgba(245,200,66,.5);line-height:1;}
+#screen-landing .eyebrow{font-size:11px;font-weight:700;letter-spacing:3px;color:var(--teal);text-transform:uppercase;margin-bottom:8px;}
+#screen-landing .sub{font-size:14px;color:var(--muted);margin-top:8px;margin-bottom:36px;}
+.landing-buttons{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;}
+
+/* ── BUTTONS ── */
+.btn{padding:11px 22px;border:none;border-radius:8px;font-family:'Inter',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.5px;display:inline-flex;align-items:center;gap:6px;}
+.btn-gold{background:var(--gold);color:var(--navy);}
+.btn-gold:hover:not(:disabled){background:#ffd740;transform:translateY(-1px);}
+.btn-teal{background:var(--teal);color:var(--navy);}
+.btn-teal:hover:not(:disabled){background:#3de0ec;transform:translateY(-1px);}
+.btn-outline{background:transparent;border:1px solid rgba(255,255,255,.2);color:var(--white);}
+.btn-outline:hover:not(:disabled){border-color:var(--gold);color:var(--gold);}
+.btn-danger{background:var(--danger);color:#fff;}
+.btn-danger:hover:not(:disabled){background:#f07070;}
+.btn-success{background:var(--success);color:var(--navy);}
+.btn-purple{background:var(--purple);color:#fff;}
+.btn-sm{padding:6px 12px;font-size:12px;}
+.btn-full{width:100%;justify-content:center;margin-bottom:8px;}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important;}
+
+/* ── LOGIN BOX ── */
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;}
+.login-box{background:var(--deep);border:1px solid rgba(245,200,66,.2);border-radius:16px;padding:36px;width:100%;max-width:380px;text-align:center;}
+.login-box h2{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--gold);letter-spacing:3px;margin-bottom:4px;}
+.login-box .login-sub{font-size:12px;color:var(--muted);margin-bottom:24px;}
+.pin-inputs{display:flex;gap:10px;justify-content:center;margin-bottom:20px;}
+.pin-dot{width:48px;height:56px;border-radius:8px;background:var(--card-bg);border:2px solid rgba(255,255,255,.1);font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--gold);text-align:center;outline:none;transition:border-color .2s;}
+.pin-dot:focus{border-color:var(--teal);}
+.pin-error{color:var(--danger);font-size:12px;min-height:18px;margin-bottom:8px;}
+.back-link{font-size:12px;color:var(--muted);cursor:pointer;margin-top:14px;display:inline-block;}
+.back-link:hover{color:var(--teal);}
+
+/* ── APP SHELL ── */
+.app-shell{max-width:1440px;margin:0 auto;padding:16px;}
+.top-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid rgba(245,200,66,.15);flex-wrap:wrap;gap:10px;}
+.top-bar-left{display:flex;align-items:center;gap:14px;}
+.top-bar h1{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--gold);letter-spacing:3px;}
+.badge{display:inline-block;padding:3px 10px;border-radius:10px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;}
+.badge-admin{background:rgba(245,200,66,.15);color:var(--gold);}
+.badge-player{background:rgba(46,202,213,.15);color:var(--teal);}
+.badge-live{background:rgba(78,203,132,.2);color:var(--success);}
+
+/* ── TABS ── */
+.tab-bar{display:flex;gap:4px;margin-bottom:20px;flex-wrap:wrap;}
+.tab-btn{padding:8px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid rgba(255,255,255,.1);color:var(--muted);background:transparent;transition:all .2s;}
+.tab-btn.active{background:var(--gold);color:var(--navy);border-color:var(--gold);}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+
+/* ── PANEL ── */
+.panel{background:var(--deep);border:1px solid rgba(245,200,66,.12);border-radius:var(--r);padding:20px;margin-bottom:16px;}
+.panel-title{font-size:11px;font-weight:700;letter-spacing:2px;color:var(--teal);text-transform:uppercase;margin-bottom:14px;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+@media(max-width:700px){.grid-2,.grid-3{grid-template-columns:1fr;}}
+
+/* ── FORM ── */
+label{display:block;font-size:11px;font-weight:700;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-bottom:5px;}
+input[type=text],input[type=number],select,textarea{background:var(--card-bg);border:1px solid rgba(255,255,255,.12);color:var(--white);border-radius:6px;padding:9px 12px;font-size:13px;font-family:'Inter',sans-serif;width:100%;outline:none;transition:border-color .2s;margin-bottom:12px;}
+input:focus,select:focus,textarea:focus{border-color:var(--teal);}
+textarea{resize:vertical;min-height:60px;}
+
+/* ── ROSTER TABLE ── */
+.roster-table{width:100%;border-collapse:collapse;}
+.roster-table th{font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.07);text-align:left;}
+.roster-table td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.05);font-size:13px;vertical-align:middle;}
+.roster-table tr:hover td{background:rgba(255,255,255,.03);}
+.pin-mask{font-family:monospace;letter-spacing:3px;color:var(--muted);}
+
+/* ── GAME CONTROLS ── */
+.main-game-grid{display:grid;grid-template-columns:320px 1fr;gap:18px;align-items:start;}
+@media(max-width:900px){.main-game-grid{grid-template-columns:1fr;}}
+.big-ball{width:100px;height:100px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff8,var(--gold),var(--gold2));display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 10px;font-family:'Bebas Neue',sans-serif;box-shadow:0 0 40px rgba(245,200,66,.5),inset 0 -4px 8px rgba(0,0,0,.3);transition:transform .3s;}
+.big-ball.empty{background:radial-gradient(circle at 35% 35%,rgba(255,255,255,.08),var(--card-bg));box-shadow:0 0 20px rgba(0,0,0,.3);}
+.big-ball.pop{animation:ballPop .5s cubic-bezier(.36,.07,.19,.97);}
+@keyframes ballPop{0%{transform:scale(.3) rotate(-10deg);opacity:0}60%{transform:scale(1.15) rotate(3deg);opacity:1}100%{transform:scale(1) rotate(0)}}
+.ball-letter{font-size:20px;color:var(--navy);line-height:1;}
+.ball-number{font-size:42px;color:var(--navy);line-height:1;}
+.ball-letter.dim,.ball-number.dim{color:var(--muted);}
+.tagline-box{background:var(--card-bg);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--gold);text-align:center;font-style:italic;margin-bottom:14px;min-height:42px;line-height:1.4;}
+.timer-row{display:flex;align-items:center;justify-content:space-between;background:var(--card-bg);border-radius:8px;padding:10px 14px;margin-bottom:12px;}
+.timer-val{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--teal);letter-spacing:2px;}
+.called-chips{display:flex;flex-wrap:wrap;gap:4px;max-height:100px;overflow-y:auto;}
+.chip{background:var(--card-bg);border:1px solid rgba(245,200,66,.3);color:var(--gold);border-radius:4px;padding:2px 7px;font-size:11px;font-weight:700;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;}
+
+/* ── PATTERN GRID ── */
+.pattern-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:3px;width:90px;margin:6px auto 0;}
+.pcell{width:16px;height:16px;border-radius:2px;background:var(--deep);}
+.pcell.on{background:var(--gold);}
+.pcell.editable{cursor:pointer;width:22px;height:22px;border:1px solid rgba(255,255,255,.08);transition:all .15s;}
+.pcell.editable:hover{transform:scale(1.1);border-color:var(--teal);}
+.pcell.editable.center{background:var(--teal);cursor:default;}
+.pcell.editable.center:hover{transform:none;}
+
+/* ── BINGO CARDS ── */
+.cards-wrap{display:grid;grid-template-columns:repeat(auto-fill,minmax(195px,1fr));gap:14px;}
+.bingo-card{background:var(--deep);border:1px solid rgba(245,200,66,.15);border-radius:var(--r);padding:12px;position:relative;transition:border-color .3s;}
+.bingo-card.winner{border-color:var(--gold);box-shadow:0 0 24px rgba(245,200,66,.4);}
+.bingo-card.winner::before{content:'🏆 BINGO!';position:absolute;top:0;left:0;right:0;background:var(--gold);color:var(--navy);text-align:center;font-weight:800;font-size:11px;padding:4px;border-radius:var(--r) var(--r) 0 0;letter-spacing:2px;}
+.card-agent{font-size:10px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.card-num{font-size:11px;color:var(--muted);margin-bottom:6px;}
+.card-header-row{display:grid;grid-template-columns:repeat(5,1fr);gap:2px;margin-bottom:2px;}
+.card-ltr{text-align:center;font-family:'Bebas Neue',sans-serif;font-size:15px;color:var(--gold);}
+.card-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:2px;}
+.ccell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;background:var(--card-bg);border-radius:3px;font-size:12px;font-weight:700;color:var(--white);transition:all .3s;}
+.ccell.free{background:var(--teal);color:var(--navy);font-size:8px;font-weight:800;text-align:center;line-height:1.1;}
+.ccell.called{background:rgba(245,200,66,.2);color:var(--gold);border:1px solid rgba(245,200,66,.4);}
+.ccell.pwin{background:var(--gold)!important;color:var(--navy)!important;border-color:transparent!important;}
+.ccell.marked{background:rgba(46,202,213,.18);border:1px solid rgba(46,202,213,.5);cursor:pointer;}
+.ccell[data-cell]{cursor:pointer;transition:transform .15s,background .2s;}
+.ccell[data-cell]:hover{transform:scale(1.06);background:rgba(255,255,255,.08);}
+.ccell[data-cell]:active{transform:scale(.94);}
+.cell-num{font-size:9px;color:var(--muted);line-height:1;}
+.cell-mark{font-size:16px;line-height:1;}
+.emoji-palette{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;background:var(--card-bg);border-radius:8px;padding:10px;margin-bottom:14px;}
+.emoji-opt{width:34px;height:34px;border-radius:8px;background:var(--deep);border:2px solid transparent;font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;}
+.emoji-opt:hover{background:rgba(255,255,255,.06);}
+.emoji-opt.selected{border-color:var(--teal);background:rgba(46,202,213,.15);}
+.marking-hint{font-size:11px;color:var(--muted);text-align:center;margin-bottom:10px;}
+
+/* ── PLAYER SCREEN ── */
+.player-header{text-align:center;padding:20px 0 14px;margin-bottom:18px;border-bottom:1px solid rgba(245,200,66,.15);}
+.player-header h2{font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--gold);letter-spacing:4px;}
+.player-header .welcome{font-size:13px;color:var(--muted);margin-top:4px;}
+.live-ball-player{display:flex;align-items:center;justify-content:center;gap:16px;background:var(--deep);border-radius:var(--r);padding:16px;margin-bottom:16px;border:1px solid rgba(245,200,66,.15);}
+.live-numbers{font-size:11px;color:var(--muted);margin-top:8px;}
+.bingo-claim-btn{width:100%;padding:16px;font-size:18px;letter-spacing:2px;border-radius:10px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);font-family:'Bebas Neue',sans-serif;border:none;cursor:pointer;transition:all .2s;margin-top:16px;}
+.bingo-claim-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 24px rgba(245,200,66,.4);}
+.bingo-claim-btn:disabled{opacity:.3;cursor:not-allowed;}
+
+/* ── LOG ── */
+.log-box{background:var(--card-bg);border-radius:8px;padding:12px;max-height:160px;overflow-y:auto;margin-top:12px;}
+.log-row{font-size:11px;color:var(--muted);padding:2px 0;border-bottom:1px solid rgba(255,255,255,.04);display:flex;gap:8px;}
+.log-t{color:var(--teal);font-weight:600;min-width:50px;}
+.log-m.ok{color:var(--success);}
+.log-m.err{color:var(--danger);}
+.log-m.info{color:var(--white);}
+
+/* ── MODAL / OVERLAY ── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:center;justify-content:center;padding:20px;}
+.overlay.show{display:flex;}
+.modal{background:var(--deep);border:1px solid var(--gold);border-radius:16px;padding:30px;max-width:420px;width:100%;text-align:center;position:relative;}
+.modal h2{font-family:'Bebas Neue',sans-serif;font-size:40px;color:var(--gold);letter-spacing:4px;margin-bottom:8px;}
+.modal p{color:var(--muted);font-size:13px;margin-bottom:16px;}
+.modal-close{position:absolute;top:12px;right:14px;background:transparent;border:none;color:var(--muted);font-size:20px;cursor:pointer;}
+.modal-close:hover{color:var(--white);}
+.spin{animation:spin 1.5s linear infinite;display:inline-block;font-size:36px;}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+
+/* ── SLACK STATUS ── */
+.slack-status{font-size:11px;color:var(--muted);text-align:center;margin-top:6px;min-height:16px;}
+.slack-status.ok{color:var(--success);}
+.slack-status.err{color:var(--danger);}
+
+/* ── MISC ── */
+.divider{height:1px;background:rgba(255,255,255,.07);margin:14px 0;}
+.stat-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;}
+.stat{background:var(--card-bg);border-radius:8px;padding:10px 16px;flex:1;min-width:80px;text-align:center;}
+.stat-val{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--gold);}
+.stat-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
+.empty-state{text-align:center;padding:40px 20px;color:var(--muted);font-size:13px;}
+.info-box{background:rgba(46,202,213,.08);border:1px solid rgba(46,202,213,.2);border-radius:8px;padding:12px;font-size:12px;color:var(--teal);margin-bottom:12px;line-height:1.5;}
+.warn-box{background:rgba(245,200,66,.08);border:1px solid rgba(245,200,66,.2);border-radius:8px;padding:12px;font-size:12px;color:var(--gold);margin-bottom:12px;line-height:1.5;}
+.flex-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.winner-badge{display:inline-block;background:rgba(78,203,132,.2);color:var(--success);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:700;letter-spacing:1px;}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════ SCREEN: LANDING ════════════════════ -->
+<div id="screen-landing" class="screen active">
+  <div class="eyebrow">🌙 Bayaning Puyat Series</div>
+  <h1>SMB BINGO</h1>
+  <div class="sub">Overnight Shift Edition · 9PM – 5AM PHT</div>
+  <div class="landing-buttons">
+    <button class="btn btn-gold" onclick="gotoAdminLogin()">🔐 Admin Portal</button>
+    <button class="btn btn-teal" onclick="gotoPlayerLogin()">🎮 Player Login</button>
+  </div>
+</div>
+
+<!-- ════════════════════ SCREEN: ADMIN LOGIN ════════════════════ -->
+<div id="screen-admin-login" class="screen">
+  <div class="login-wrap">
+    <div class="login-box">
+      <div style="font-size:32px;margin-bottom:8px;">🔐</div>
+      <h2>Admin Access</h2>
+      <div class="login-sub">Sir Rendy's Control Panel</div>
+      <div class="pin-inputs" id="adminPinInputs"></div>
+      <div class="pin-error" id="adminPinError"></div>
+      <button class="btn btn-gold btn-full" onclick="submitAdminPin()">Enter</button>
+      <span class="back-link" onclick="showScreen('screen-landing')">← Back</span>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════ SCREEN: PLAYER LOGIN ════════════════════ -->
+<div id="screen-player-login" class="screen">
+  <div class="login-wrap">
+    <div class="login-box">
+      <div style="font-size:32px;margin-bottom:8px;">🎮</div>
+      <h2>Player Login</h2>
+      <div class="login-sub" id="playerLoginSub">Enter your 4-digit PIN</div>
+      <!-- Step 1: PIN entry -->
+      <div id="playerPinStep">
+        <div class="pin-inputs" id="playerPinInputs"></div>
+        <div class="pin-error" id="playerPinError"></div>
+        <button class="btn btn-teal btn-full" onclick="submitPlayerPin()">Enter</button>
+      </div>
+      <!-- Step 2: Name picker for shared PINs -->
+      <div id="playerNameStep" style="display:none;">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Piliin ang iyong pangalan:</div>
+        <div id="playerNameList" style="display:flex;flex-direction:column;gap:8px;max-height:280px;overflow-y:auto;"></div>
+        <div class="pin-error" id="playerNameError"></div>
+        <button class="btn btn-outline btn-full btn-sm" style="margin-top:12px;" onclick="backToPinStep()">← Back</button>
+      </div>
+      <span class="back-link" onclick="showScreen('screen-landing')">← Main Menu</span>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════ SCREEN: ADMIN PORTAL ════════════════════ -->
+<div id="screen-admin" class="screen">
+  <div class="app-shell">
+    <div class="top-bar">
+      <div class="top-bar-left">
+        <span style="font-size:22px;">🌙</span>
+        <h1>SMB BINGO</h1>
+        <span class="badge badge-admin">Admin</span>
+        <span class="badge badge-live" id="adminGameBadge" style="display:none;">● LIVE</span>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="adminLogout()">Logout</button>
+    </div>
+
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchAdminTab('roster')">👥 Player Roster</button>
+      <button class="tab-btn" onclick="switchAdminTab('game')">🎱 Game Control</button>
+      <button class="tab-btn" onclick="switchAdminTab('dashboard')">📊 Live Dashboard</button>
+      <button class="tab-btn" onclick="switchAdminTab('settings')">⚙️ Settings</button>
+    </div>
+
+    <!-- TAB: ROSTER -->
+    <div class="tab-content active" id="tab-roster">
+      <div class="info-box">
+        ℹ️ <strong>Default PIN is 1234</strong> for all players. Players can change their own PIN after logging in. Ang indicator sa <em>PIN Status</em> column ay nagpapakita kung sinong nagpalit na ng kanilang PIN.<br>
+        ⚠️ <strong>Jan Rome</strong> is set to Inactive by default per admin rule.
+      </div>
+      <div class="panel">
+        <div class="panel-title">Add New Player</div>
+        <div class="grid-3">
+          <div>
+            <label>Player Name</label>
+            <input type="text" id="newPlayerName" placeholder="e.g. Alvin Tamayo"/>
+          </div>
+          <div>
+            <label>4-Digit PIN</label>
+            <input type="text" id="newPlayerPin" maxlength="4" placeholder="e.g. 1234"/>
+          </div>
+          <div>
+            <label>Max Cards per Game</label>
+            <select id="newPlayerCards">
+              <option value="1">1 Card</option>
+              <option value="2" selected>2 Cards</option>
+              <option value="3">3 Cards</option>
+              <option value="4">4 Cards</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-gold btn-sm" onclick="addPlayer()">+ Add Player</button>
+        <div id="rosterError" style="color:var(--danger);font-size:12px;margin-top:6px;"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">Player Roster (<span id="rosterCount">0</span> players)</div>
+        <div style="overflow-x:auto;">
+          <table class="roster-table" id="rosterTable">
+            <thead>
+              <tr>
+                <th>Name</th><th>PIN</th><th>PIN Status</th><th>Max Cards</th><th>Status</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="rosterBody"></tbody>
+          </table>
+          <div class="empty-state" id="rosterEmpty">No players yet. Add your first player above!</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: GAME -->
+    <div class="tab-content" id="tab-game">
+      <div class="main-game-grid">
+        <!-- LEFT -->
+        <div>
+          <div class="panel">
+            <div class="panel-title">🎮 Host Controls</div>
+
+            <!-- Ball -->
+            <div style="text-align:center;margin-bottom:14px;">
+              <div class="big-ball empty" id="adminBigBall">
+                <div class="ball-letter dim">—</div>
+                <div class="ball-number dim">—</div>
+              </div>
+              <div style="font-size:12px;color:var(--muted);">Drawn: <span id="adminDrawnCount" style="color:var(--gold);font-weight:700;">0</span> / 75</div>
+            </div>
+
+            <div class="tagline-box" id="adminTagline">Handa na ba ang lahat? Let's BINGO! 🎉</div>
+
+            <!-- Pattern -->
+            <div style="background:var(--card-bg);border-radius:8px;padding:12px;text-align:center;margin-bottom:12px;">
+              <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--teal);text-transform:uppercase;margin-bottom:6px;" id="adminPatternName">—</div>
+              <div class="pattern-grid" id="adminPatternGrid"></div>
+            </div>
+
+            <!-- Pattern Setup (only usable before a game starts) -->
+            <div class="panel" style="padding:12px;margin-bottom:12px;background:var(--card-bg);" id="patternSetupPanel">
+              <div class="panel-title" style="margin-bottom:8px;">🎯 Set Next Pattern</div>
+              <label style="margin-bottom:4px;">Mode</label>
+              <select id="patternModeSelect" onchange="onPatternModeChange()">
+                <option value="random">Random (default)</option>
+                <option value="preset">Choose Preset</option>
+                <option value="custom">Custom — Draw My Own</option>
+              </select>
+
+              <div id="presetPickerWrap" style="display:none;">
+                <label style="margin-bottom:4px;">Preset Pattern</label>
+                <select id="presetPickerSelect"></select>
+              </div>
+
+              <div id="customPickerWrap" style="display:none;">
+                <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Tap cells to design the winning pattern. Center is always FREE.</div>
+                <div class="pattern-grid" id="customPatternEditor" style="width:130px;gap:4px;"></div>
+                <div style="display:flex;gap:6px;margin-top:8px;">
+                  <button class="btn btn-outline btn-sm" style="flex:1;" onclick="clearCustomPattern()">Clear</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Timer -->
+            <div class="timer-row">
+              <div>
+                <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Next Auto-Draw</div>
+                <div class="timer-val" id="adminTimerDisplay">30:00</div>
+              </div>
+              <div style="font-size:10px;color:var(--muted);text-align:right;">Every 30 min<br>9PM–5AM PHT</div>
+            </div>
+
+            <button class="btn btn-gold btn-full" id="adminStartBtn" onclick="adminStartGame()">🎉 Start New Game</button>
+            <button class="btn btn-teal btn-full" id="adminDrawBtn" onclick="adminDrawNumber()" disabled>🎱 Draw Next Number</button>
+            <button class="btn btn-outline btn-full btn-sm" id="adminPatternBtn" onclick="adminNewPattern()" disabled>🎲 Randomize Pattern</button>
+            <div class="divider"></div>
+            <button class="btn btn-danger btn-full btn-sm" id="adminBingoBtn" onclick="adminBingoClaim()" disabled>🏆 BINGO Claimed — End Game</button>
+            <button class="btn btn-outline btn-full btn-sm" onclick="adminResetGame()">↺ Reset Game</button>
+            <div class="slack-status" id="adminSlackStatus"></div>
+
+            <div class="divider"></div>
+            <div class="panel-title">Called Numbers</div>
+            <div class="called-chips" id="adminCalledChips"></div>
+          </div>
+        </div>
+
+        <!-- RIGHT -->
+        <div>
+          <div class="panel">
+            <div class="panel-title">📋 All Player Cards</div>
+            <div class="stat-row" id="adminStats"></div>
+            <div class="cards-wrap" id="adminCardsWrap">
+              <div class="empty-state">Start a game to see player cards.</div>
+            </div>
+            <div class="log-box" id="adminLog"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: DASHBOARD -->
+    <div class="tab-content" id="tab-dashboard">
+      <div class="panel">
+        <div class="panel-title">📊 Live Game Dashboard</div>
+        <div id="dashboardContent">
+          <div class="empty-state">No active game. Start a game from the Game Control tab.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: SETTINGS -->
+    <div class="tab-content" id="tab-settings">
+      <div class="panel">
+        <div class="panel-title">⚙️ Game Settings</div>
+        <div class="grid-2">
+          <div>
+            <label>Admin PIN (4 digits)</label>
+            <input type="text" id="settingsAdminPin" maxlength="4" placeholder="Current: 0000"/>
+          </div>
+          <div>
+            <label>Draw Interval (minutes)</label>
+            <input type="number" id="settingsInterval" min="5" max="60" value="30"/>
+          </div>
+        </div>
+        <div>
+          <label>Slack Webhook URL</label>
+          <input type="text" id="settingsWebhook" value="https://hooks.slack.com/services/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"/>
+        </div>
+        <div>
+          <label>Slack Proxy URL <span style="color:var(--muted);font-weight:400;text-transform:none;">(Render.com — recommended)</span></label>
+          <input type="text" id="settingsProxyUrl" placeholder="e.g. https://smb-slack-proxy.onrender.com/slack"/>
+        </div>
+        <div class="flex-row" style="margin-bottom:12px;">
+          <button class="btn btn-teal btn-sm" onclick="testSlackConnection()">📡 Send Test Message</button>
+          <span id="testSlackStatus" style="font-size:12px;color:var(--muted);"></span>
+        </div>
+        <div class="info-box">✅ <strong>Recommended:</strong> Set the Proxy URL above (deploy the included <code>smb-slack-proxy</code> Node.js server to Render.com — see README). When a Proxy URL is set, all Slack posts route through it and avoid CORS issues entirely.</div>
+        <div class="warn-box">⚠️ Without a Proxy URL, the game falls back to posting directly to the webhook from the browser, which Slack's CORS policy may silently block. The game still works 100% without Slack either way.</div>
+        <button class="btn btn-gold btn-sm" onclick="saveSettings()">Save Settings</button>
+        <div id="settingsSaved" style="color:var(--success);font-size:12px;margin-top:6px;"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">🗑️ Data Management</div>
+        <div class="flex-row" style="flex-wrap:wrap;">
+        <button class="btn btn-danger btn-sm" onclick="clearAllData()">🗑️ Clear All Data</button>
+        <button class="btn btn-outline btn-sm" onclick="resetToDefaultRoster()">↺ Reset to Default Roster</button>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px;">Clear All resets everything. Reset Roster restores the 26 default players with PIN 1234.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════ SCREEN: PLAYER ════════════════════ -->
+<div id="screen-player" class="screen">
+  <div class="app-shell" style="max-width:900px;">
+    <div class="player-header">
+      <div style="font-size:11px;letter-spacing:3px;color:var(--teal);text-transform:uppercase;margin-bottom:4px;">🌙 Bayaning Puyat BINGO</div>
+      <h2 id="playerName">Player</h2>
+      <div class="welcome" id="playerWelcome">Welcome! Handa ka na ba? 🎯</div>
+    </div>
+
+    <!-- Live ball -->
+    <div class="live-ball-player" id="playerLiveBall">
+      <div>
+        <div class="big-ball empty" id="playerBigBall" style="width:80px;height:80px;">
+          <div class="ball-letter dim" style="font-size:16px;">—</div>
+          <div class="ball-number dim" style="font-size:34px;">—</div>
+        </div>
+      </div>
+      <div style="flex:1;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Latest Draw</div>
+        <div style="font-weight:700;font-size:16px;" id="playerLastDraw">Waiting for draw...</div>
+        <div class="tagline-box" id="playerTagline" style="text-align:left;margin:6px 0 0;padding:6px 10px;min-height:auto;font-size:12px;">—</div>
+        <div class="live-numbers" id="playerCalledSummary"></div>
+      </div>
+    </div>
+
+    <!-- Player cards -->
+    <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--teal);text-transform:uppercase;margin-bottom:10px;">Your Cards</div>
+
+    <div class="emoji-palette" id="emojiPalette"></div>
+    <div class="marking-hint">👆 I-tap ang numero para markahan. Tap ulit para tanggalin. <strong>Ikaw ang bahala sa pagmarka — kung hindi mo na-mark, ikaw ang nakaligtaan!</strong></div>
+
+    <div class="cards-wrap" id="playerCardsWrap">
+      <div class="empty-state">Waiting for the host to start the game...</div>
+    </div>
+
+    <!-- BINGO claim -->
+    <button class="bingo-claim-btn" id="playerBingoBtn" onclick="playerClaimBingo()" disabled>
+      🏆 I GOT BINGO! 🏆
+    </button>
+
+    <div class="log-box" id="playerLog" style="margin-top:12px;"></div>
+
+    <div style="text-align:center;margin-top:16px;">
+      <div style="display:flex;align-items:center;justify-content:center;gap:20px;flex-wrap:wrap;">
+        <span class="back-link" onclick="playerLogout()">← Logout</span>
+        <span class="back-link" style="color:var(--teal);" onclick="openPinChange()">🔑 Change PIN</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════ WIN MODAL ════════════════════ -->
+<div class="overlay" id="winOverlay">
+  <div class="modal">
+    <div class="spin">🎊</div>
+    <h2>BINGO!</h2>
+    <p id="winModalText">Nanalo! Congratulations! 🎉</p>
+    <p style="color:var(--gold);font-weight:700;font-size:16px;margin-bottom:16px;" id="winPatternText"></p>
+    <button class="btn btn-gold btn-full" onclick="document.getElementById('winOverlay').classList.remove('show');">Close</button>
+  </div>
+</div>
+
+<!-- ════════════════════ EDIT PLAYER MODAL ════════════════════ -->
+<div class="overlay" id="editOverlay">
+  <div class="modal" style="text-align:left;">
+    <button class="modal-close" onclick="document.getElementById('editOverlay').classList.remove('show');">×</button>
+    <h2 style="font-size:26px;margin-bottom:16px;">Edit Player</h2>
+    <input type="hidden" id="editPlayerId"/>
+    <label>Name</label>
+    <input type="text" id="editPlayerName"/>
+    <label>PIN (4 digits)</label>
+    <input type="text" id="editPlayerPin" maxlength="4"/>
+    <label>Max Cards per Game</label>
+    <select id="editPlayerCards">
+      <option value="1">1 Card</option>
+      <option value="2">2 Cards</option>
+      <option value="3">3 Cards</option>
+      <option value="4">4 Cards</option>
+    </select>
+    <div style="display:flex;gap:8px;margin-top:4px;">
+      <button class="btn btn-gold" style="flex:1;" onclick="saveEditPlayer()">Save</button>
+      <button class="btn btn-outline" style="flex:1;" onclick="document.getElementById('editOverlay').classList.remove('show');">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════ PIN CHANGE MODAL ════════════════════ -->
+<div class="overlay" id="pinChangeOverlay">
+  <div class="modal" style="text-align:left;">
+    <button class="modal-close" onclick="document.getElementById('pinChangeOverlay').classList.remove('show');">×</button>
+    <h2 style="font-size:26px;margin-bottom:6px;">Change PIN</h2>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Palitan ang iyong 4-digit PIN</p>
+    <label>Current PIN</label>
+    <input type="text" id="pcCurrentPin" maxlength="4" inputmode="numeric" placeholder="Current PIN"/>
+    <label>New PIN (4 digits)</label>
+    <input type="text" id="pcNewPin" maxlength="4" inputmode="numeric" placeholder="New PIN"/>
+    <label>Confirm New PIN</label>
+    <input type="text" id="pcConfirmPin" maxlength="4" inputmode="numeric" placeholder="Confirm PIN"/>
+    <div id="pcError" style="color:var(--danger);font-size:12px;min-height:18px;margin-bottom:8px;"></div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-gold" style="flex:1;" onclick="savePinChange()">Save New PIN</button>
+      <button class="btn btn-outline" style="flex:1;" onclick="document.getElementById('pinChangeOverlay').classList.remove('show');">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+//  DATA & CONSTANTS
+// ════════════════════════════════════════════════════════════
+const LETTERS = ['B','I','N','G','O'];
+const COL_RANGES = {B:[1,15],I:[16,30],N:[31,45],G:[46,60],O:[61,75]};
+
+// Taglish callouts — all 75 numbers with witty lines
+const CALLOUTS = {
+  'B1': 'Sa letrang B, numero uno! Sabi ng boss: Number 1 ka sa amin! 😤 — B1!',
+  'B2': 'B2! Dalawa! Para sa mga dalawang mukha dyan, alam ninyo kung sino kayo! 😏 — B2!',
+  'B3': 'B3! Tatlo! Tatlong saglit bago mo makita ang Bingo mo! — B3!',
+  'B4': 'B4! Apat! Bago mo malaman, nananalo ka na — o baka hindi! — B4!',
+  'B5': 'B5! Lima! Limang minuto nalang, lumapit na sa monitor! — B5!',
+  'B6': 'B6! Siyam na kulang sa labinlima! Konting tiis lang! — B6!',
+  'B7': 'B7! Pito! Lucky number 7! Swerte ka ngayong gabi, sana lang! 🍀 — B7!',
+  'B8': 'B8! Walo! Wala ka sa walong swerte kung hindi mo ito minarkahan! — B8!',
+  'B9': 'B9! Siyam! Siyam na buhay ang pusa, sana isa ay sa\'yo — sa bingo! 🐱 — B9!',
+  'B10': 'B10! Sampu! Top ten ka ba? Ito ang simula ng tagumpay mo — B10!',
+  'B11': 'B11! Labing-isa! Eleven eleven, mag-wish ka — sana bingo! 🌠 — B11!',
+  'B12': 'B12! Labindalawa! Isang dosena ng pagkakataon! — B12!',
+  'B13': 'B13! Labintatlo! Malas daw ang 13, pero para sa\'yo sana pala palad! 🤞 — B13!',
+  'B14': 'B14! Labing-apat! Halos kalahati na ng B column! — B14!',
+  'B15': 'B15! Labinlima! Huling numero sa B! Kumpleto na ang B side! — B15!',
+  'I16': 'Sa letrang I, siyam-napu\'t walo kasama ang lahat? Hindi! — I16!',
+  'I17': 'I17! Ang edad ng crush mo nung high school! Sus, matagal na iyon! 😂 — I17!',
+  'I18': 'I18! Legal na! Pero wag mag-alak ngayong gabi, shift pa tayo! — I18!',
+  'I19': 'I19! Sampu nalang ang kalabas ng I-20 — malapit na! — I19!',
+  'I20': 'I20! Dalawampung beses kang kumain ng instant noodles ngayong buwan, alam ko! 🍜 — I20!',
+  'I21': 'I21! Blackjack! Mag-bet ka, mga Bayani! — I21!',
+  'I22': 'I22! Dalawampu\'t dalawa — dobleng swerte, dobleng kaffee! ☕☕ — I22!',
+  'I23': 'I23! Michael Jordan number! Laro ka ba ng basketball o bingo? Bingo na ngayon! 🏀 — I23!',
+  'I24': 'I24! Dalawampu\'t apat na oras ang trabaho namin — joke! 8 hours lang naman... minsan. 😅 — I24!',
+  'I25': 'I25! Kalahating ikot ng roulette! — I25!',
+  'I26': 'I26! Dalawampu\'t anim! Andito ka pa rin sa trabaho — champion ka! 💪 — I26!',
+  'I27': 'I27! Dalawampu\'t pito! Pito tulad ng mga araw sa isang linggo — walang pahinga? — I27!',
+  'I28': 'I28! Para sa mga 28 na beses na nag-CR ngayong gabi! Kilala natin sila! 😂 — I28!',
+  'I29': 'I29! Ang huling araw na may 29 sa Pebrero — bihirang bihira tulad ng iyong bingo win! — I29!',
+  'I30': 'I30! Trenta! Tatlumpung segundo nalang para markahan ang iyong card! — I30!',
+  'N31': 'Sa gitna ng BINGO — N31! Tatlumpu\'t isa, tulad ng flavors ng Baskin Robbins — minus ang ilan! 🍦 — N31!',
+  'N32': 'N32! Tatlumpu\'t dalawa, bilang ng ngipin mo — baka kulang na? 😬 — N32!',
+  'N33': 'N33! Triple three! Swerte ito sa Chinese culture — swerte rin sana sa iyong card! 🍀 — N33!',
+  'N34': 'N34! Tatlumpu\'t apat! Andito pa rin tayo, mga Bayaning Puyat! 🌙 — N34!',
+  'N35': 'N35! Singkwenta minus kinse — kaya mo ba ang mental math habang inaantok? 😂 — N35!',
+  'N36': 'N36! Tatlumpu\'t anim! Kamangha-manghang numero para sa walang natutulog ngayon! — N36!',
+  'N37': 'N37! Primo numero! Prime number ito, tulad ng iyong swerte ngayong gabi! — N37!',
+  'N38': 'N38! Tatlong pung at walo — halos kalahati ng bingo board! Nasa kalooban mo na ang panalo! — N38!',
+  'N39': 'N39! Tatlumpu\'t siyam! Isang bawas sa 40 — malapit na ang birthday mo? Bakit hindi! — N39!',
+  'N40': 'N40! Apatnapu! Nakakapagtaka bakit ang libre sa FREE space pero ito ay hindi — N40!',
+  'N41': 'N41! Apat at daan... ay hindi, apatnapu\'t isa! Konting matematika habang inaantok! 😴 — N41!',
+  'N42': 'N42! The answer to life, the universe, and everything — at bingo ba? — N42!',
+  'N43': 'N43! Apatnapu\'t tatlo! Konting Googling mo, may kahulugan ito. Wala na talagang oras! — N43!',
+  'N44': 'N44! Double four! Dalawang upuan sa opisina? Wala rin! — N44!',
+  'N45': 'N45! Huling N number! Kung nandito ka pa rin — hero ka talaga! 🦸 — N45!',
+  'G46': 'G46! Sa letrang G — apatnapu\'t anim! Paborito kong numero — baka ikaw rin! — G46!',
+  'G47': 'G47! Apatnapu\'t pito! Magaling kang manghula? Hulaan mo kung ito ay nasa card mo! 🔮 — G47!',
+  'G48': 'G48! Apatnapu\'t walo! Forty-eight na dahilan para magmahal sa overnight shift — isa rito! 😂 — G48!',
+  'G49': 'G49! Isa bawas sa 50! Konting tiis pa, malapit na ang sweldo! 💰 — G49!',
+  'G50': 'G50! Limampung piso ang halaga ng pagmamahal mo sa trabaho — libre naman ang bingo! — G50!',
+  'G51': 'G51! Limampu\'t isa! Hindi ito ang edad ng lolo mo — yon ay O75! — G51!',
+  'G52': 'G52! Limampu\'t dalawa! Card ng baraha — puwede ring maglaro ng pusoy habang nag-aantay! — G52!',
+  'G53': 'G53! Limampu\'t tatlo! Tatlong pang draws bago matulog — diko alam! — G53!',
+  'G54': 'G54! Limampu\'t apat! Halika na at markahan — baka ikaw ang susunod na manalo! — G54!',
+  'G55': 'G55! Double five sa G! Lima-lima, tulad ng dalawang kamay — hawakan ang panalo! ✋✋ — G55!',
+  'G56': 'G56! Limampu\'t anim! Gabing madilim, tulad ng opisina sa 3AM — nandito pa rin tayo! 🕒 — G56!',
+  'G57': 'G57! Limampu\'t pito! Pito\'ng araw walang pahinga? Hindi naman — weekend naman! Sana! 😅 — G57!',
+  'G58': 'G58! Limampu\'t walo! Walang panalo sa hindi naglalaro — at walang bingo sa walang card! — G58!',
+  'G59': 'G59! Isa bawas sa 60! Halos makarating na tayo sa O! — G59!',
+  'G60': 'G60! Animnapu! Isang oras sa relo — iyan ang halaga ng iyong konsentrasyong mawala ngayon! — G60!',
+  'O61': 'Sa letrang O — O61! Animnapu\'t isa! Isang tao palang hindi tumatanda... si boss! — O61!',
+  'O62': 'O62! Animnapu\'t dalawa! Dalawang beses na nagising ka na ngayong gabi? O tatlo na? 😴 — O62!',
+  'O63': 'O63! Animnapu\'t tatlo! Sa lahat ng posibleng numero, ito ang lumabas — Diyos ang may alam! — O63!',
+  'O64': 'O64! Sixty-four! Nintendo 64 — mas gusto ko pa rin ang bingo kaysa Donkey Kong! 🎮 — O64!',
+  'O65': 'O65! Animnapu\'t lima! Pensyon na dapat, pero nandito pa rin tayo! Champions! 💪 — O65!',
+  'O66': 'O66! Double six! Anim-anim, tulad ng katamaan na gusto mong gawin ngayon — wag! — O66!',
+  'O67': 'O67! Animnapu\'t pito! Lucky sevens hindi — pero swerte pa rin? Sana! 🍀 — O67!',
+  'O68': 'O68! Animnapu\'t walo! Walo pang numero bago mag-75 — konting tiis nalang! — O68!',
+  'O69': 'O69! *Clears throat* — Bingo lang ang isip natin dito, ha! 😂 — O69!',
+  'O70': 'O70! Pitumpu! 7-0, tulad ng score ng paboritong team laban sa katapat... baka! — O70!',
+  'O71': 'O71! Pitumpu\'t isa! Isa pang numero, isa pang pagkakataon — ikaw ba ang mananalo? — O71!',
+  'O72': 'O72! Pitumpu\'t dalawa! Dalawang digit na malapit sa katapusan — ng bingo board! — O72!',
+  'O73': 'O73! Pitumpu\'t tatlo! Konting numero nalang, sino ang mananalo? Anticipation! 🎯 — O73!',
+  'O74': 'O74! Pitumpu\'t apat! Isa nalang ang kulang sa pinakamataas! Lapit na! — O74!',
+  'O75': 'O75! Ang huling numero! PITUMPU\'T LIMA — edad ng lolo mo! 👴 Ito ang pinakamataas na O! — O75!',
+};
+
+// ════════════════════════════════════════════════════════════
+//  PATTERNS
+// ════════════════════════════════════════════════════════════
+const PATTERNS = [
+  {name:"Straight Line",cells:[1,1,1,1,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0].map(Boolean)},
+  {name:"Letter X",cells:[1,0,0,0,1,0,1,0,1,0,0,0,1,0,0,0,1,0,1,0,1,0,0,0,1].map(Boolean)},
+  {name:"Four Corners",cells:[1,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1].map(Boolean)},
+  {name:"Letter T",cells:[1,1,1,1,1,0,0,1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1,0,0].map(Boolean)},
+  {name:"Letter L",cells:[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1,1,1,1,1].map(Boolean)},
+  {name:"Plus Sign",cells:[0,0,1,0,0,0,0,1,0,0,1,1,1,1,1,0,0,1,0,0,0,0,1,0,0].map(Boolean)},
+  {name:"Outside Frame",cells:Array(25).fill(0).map((_,i)=>{const r=Math.floor(i/5),c=i%5;return(r===0||r===4||c===0||c===4)?true:false;})},
+  {name:"Blackout",cells:Array(25).fill(true)},
+  {name:"Postage Stamp",cells:[0,0,0,1,1,0,0,0,1,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0].map(Boolean)},
+  {name:"Letter Z",cells:[1,1,1,1,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,1,1,1,1].map(Boolean)},
+];
+
+// ════════════════════════════════════════════════════════════
+//  STATE & STORAGE
+// ════════════════════════════════════════════════════════════
+
+// Default roster — all start with PIN 1234. Jan Rome is seeded but inactive (per admin rule).
+const DEFAULT_ROSTER = [
+  'Francine','Gilda','Winnie','Paul John','Charles','Junalyn','Jenifer',
+  'Mitzi','Grace','Mary Jane','Issamari','Fatima','Rose Veronica Jane',
+  'Gretchen','Joshua Jhaysen','Diana Joy','Jubilee','Dianica','Jennylyn',
+  'Jan Benedict','Charlote','Cathlene','Clarisse','Jan Rome','Erika','Leira Lyn'
+];
+
+function buildDefaultPlayers() {
+  return DEFAULT_ROSTER.map((name, idx) => ({
+    id: 'default_' + idx,
+    name,
+    pin: '1234',
+    maxCards: 2,
+    active: name !== 'Jan Rome', // Jan Rome excluded per standing rule
+    pinChanged: false,
+  }));
+}
+
+let DB = {
+  adminPin: '0000',
+  webhookUrl: 'https://hooks.slack.com/services/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',
+  proxyUrl: '',
+  drawIntervalMin: 30,
+  players: [],
+  game: null,
+};
+
+let currentPlayer = null;
+let adminTimer = null, adminCountdown = null, adminSecondsLeft = 0;
+let nextDrawAt = null;
+
+function loadDB() {
+  try {
+    const s = localStorage.getItem('smbBingoDB');
+    if (s) {
+      DB = { ...DB, ...JSON.parse(s) };
+    } else {
+      // First load — seed the roster
+      DB.players = buildDefaultPlayers();
+      saveDB();
+    }
+  } catch(e) {
+    DB.players = buildDefaultPlayers();
+  }
+}
+function saveDB() {
+  try { localStorage.setItem('smbBingoDB', JSON.stringify(DB)); } catch(e){}
+}
+loadDB();
+
+// ════════════════════════════════════════════════════════════
+//  SCREEN ROUTING
+// ════════════════════════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function gotoAdminLogin() {
+  buildPinInputs('adminPinInputs','adminPinError');
+  showScreen('screen-admin-login');
+}
+function gotoPlayerLogin() {
+  buildPinInputs('playerPinInputs','playerPinError');
+  showScreen('screen-player-login');
+}
+
+function buildPinInputs(containerId, errorId) {
+  const c = document.getElementById(containerId);
+  c.innerHTML = '';
+  for(let i=0;i<4;i++){
+    const inp = document.createElement('input');
+    inp.type='text';inp.maxLength=1;inp.className='pin-dot';inp.inputMode='numeric';
+    inp.dataset.idx=i;
+    inp.addEventListener('input',e=>{
+      e.target.value=e.target.value.replace(/\D/g,'');
+      if(e.target.value&&i<3) c.children[i+1].focus();
+    });
+    inp.addEventListener('keydown',e=>{
+      if(e.key==='Backspace'&&!e.target.value&&i>0) c.children[i-1].focus();
+      if(e.key==='Enter'){
+        if(containerId==='adminPinInputs') submitAdminPin();
+        else submitPlayerPin();
+      }
+    });
+    c.appendChild(inp);
+  }
+  c.children[0].focus();
+}
+
+function getPinValue(containerId) {
+  return Array.from(document.getElementById(containerId).children).map(i=>i.value).join('');
+}
+
+function submitAdminPin() {
+  const pin = getPinValue('adminPinInputs');
+  if(pin === DB.adminPin) {
+    showScreen('screen-admin');
+    refreshRosterUI();
+    refreshAdminGame();
+    document.getElementById('settingsWebhook').value = DB.webhookUrl;
+    document.getElementById('settingsProxyUrl').value = DB.proxyUrl || '';
+    document.getElementById('settingsInterval').value = DB.drawIntervalMin;
+  } else {
+    document.getElementById('adminPinError').textContent='Maling PIN! Try ulit.';
+    setTimeout(()=>document.getElementById('adminPinError').textContent='',2000);
+  }
+}
+
+function submitPlayerPin() {
+  const pin = getPinValue('playerPinInputs');
+  const matches = DB.players.filter(p=>p.pin===pin&&p.active!==false);
+  if(matches.length===1){
+    currentPlayer = matches[0];
+    showPlayerScreen();
+  } else if(matches.length>1){
+    // Multiple players share this PIN — show name picker
+    document.getElementById('playerPinStep').style.display='none';
+    document.getElementById('playerNameStep').style.display='block';
+    document.getElementById('playerLoginSub').textContent='Piliin ang iyong pangalan';
+    const list=document.getElementById('playerNameList');
+    list.innerHTML='';
+    matches.forEach(p=>{
+      const btn=document.createElement('button');
+      btn.className='btn btn-outline btn-full';
+      btn.textContent=p.name;
+      btn.onclick=()=>{
+        // Re-fetch from DB in case it was updated
+        currentPlayer=DB.players.find(x=>x.id===p.id)||p;
+        showPlayerScreen();
+      };
+      list.appendChild(btn);
+    });
+  } else {
+    document.getElementById('playerPinError').textContent='Maling PIN! Pakitingnan ulit.';
+    setTimeout(()=>document.getElementById('playerPinError').textContent='',2000);
+  }
+}
+
+function backToPinStep(){
+  document.getElementById('playerPinStep').style.display='block';
+  document.getElementById('playerNameStep').style.display='none';
+  document.getElementById('playerLoginSub').textContent='Enter your 4-digit PIN';
+  buildPinInputs('playerPinInputs','playerPinError');
+}
+
+function adminLogout() { showScreen('screen-landing'); }
+function playerLogout() {
+  if(window._playerPoll){ clearInterval(window._playerPoll); window._playerPoll=null; }
+  currentPlayer=null;
+  showScreen('screen-landing');
+}
+
+// ════════════════════════════════════════════════════════════
+//  ADMIN TAB SWITCHING
+// ════════════════════════════════════════════════════════════
+function switchAdminTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  const tabEl = document.getElementById('tab-'+name);
+  if(tabEl) tabEl.classList.add('active');
+  event.target.classList.add('active');
+  if(name==='dashboard') refreshDashboard();
+}
+
+// ════════════════════════════════════════════════════════════
+//  ROSTER MANAGEMENT
+// ════════════════════════════════════════════════════════════
+function generateId(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+
+function addPlayer() {
+  const name = document.getElementById('newPlayerName').value.trim();
+  const pin = document.getElementById('newPlayerPin').value.trim();
+  const cards = parseInt(document.getElementById('newPlayerCards').value);
+  const errEl = document.getElementById('rosterError');
+
+  if(!name){errEl.textContent='Lagyan ng pangalan ang player!';return;}
+  if(!/^\d{4}$/.test(pin)){errEl.textContent='PIN ay dapat 4 digits!';return;}
+  if(DB.players.some(p=>p.pin===pin)){errEl.textContent='Yung PIN na iyon ay ginamit na. Subukan ang iba!';return;}
+  if(DB.players.some(p=>p.name.toLowerCase()===name.toLowerCase())){errEl.textContent='May player na may ganoong pangalan!';return;}
+
+  DB.players.push({id:generateId(),name,pin,maxCards:cards,active:true});
+  saveDB();
+  errEl.textContent='';
+  document.getElementById('newPlayerName').value='';
+  document.getElementById('newPlayerPin').value='';
+  document.getElementById('newPlayerCards').value='2';
+  refreshRosterUI();
+}
+
+function refreshRosterUI() {
+  const tbody = document.getElementById('rosterBody');
+  const empty = document.getElementById('rosterEmpty');
+  document.getElementById('rosterCount').textContent = DB.players.length;
+  tbody.innerHTML='';
+  if(DB.players.length===0){empty.style.display='block';return;}
+  empty.style.display='none';
+  DB.players.forEach(p=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td style="font-weight:600;">${p.name}</td>
+      <td><span class="pin-mask">${'●'.repeat(4)}</span></td>
+      <td>${pinStatusBadge(p)}</td>
+      <td>${p.maxCards} card${p.maxCards>1?'s':''}</td>
+      <td><span class="${p.active!==false?'winner-badge':'badge badge-admin'}">${p.active!==false?'Active':'Inactive'}</span></td>
+      <td>
+        <div class="flex-row">
+          <button class="btn btn-outline btn-sm" onclick="openEditPlayer('${p.id}')">✏️ Edit</button>
+          <button class="btn btn-sm" style="background:rgba(224,92,92,.15);color:var(--danger);border:1px solid rgba(224,92,92,.3);" onclick="togglePlayer('${p.id}')">${p.active!==false?'Deactivate':'Activate'}</button>
+          <button class="btn btn-sm" style="background:rgba(245,200,66,.1);color:var(--gold);border:1px solid rgba(245,200,66,.3);" onclick="adminResetPlayerPin('${p.id}')">Reset PIN</button>
+          <button class="btn btn-danger btn-sm" onclick="deletePlayer('${p.id}')">🗑️</button>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function openEditPlayer(id) {
+  const p = DB.players.find(x=>x.id===id);
+  if(!p) return;
+  document.getElementById('editPlayerId').value=id;
+  document.getElementById('editPlayerName').value=p.name;
+  document.getElementById('editPlayerPin').value=p.pin;
+  document.getElementById('editPlayerCards').value=p.maxCards;
+  document.getElementById('editOverlay').classList.add('show');
+}
+
+function saveEditPlayer() {
+  const id = document.getElementById('editPlayerId').value;
+  const name = document.getElementById('editPlayerName').value.trim();
+  const pin = document.getElementById('editPlayerPin').value.trim();
+  const cards = parseInt(document.getElementById('editPlayerCards').value);
+  if(!name||!/^\d{4}$/.test(pin)){alert('Pakitingnan ang mga input!');return;}
+  const dup = DB.players.find(p=>p.pin===pin&&p.id!==id);
+  if(dup){alert('Yung PIN ay ginagamit na ng ibang player!');return;}
+  const p = DB.players.find(x=>x.id===id);
+  if(p){Object.assign(p,{name,pin,maxCards:cards});}
+  saveDB();
+  document.getElementById('editOverlay').classList.remove('show');
+  refreshRosterUI();
+}
+
+function togglePlayer(id){
+  const p=DB.players.find(x=>x.id===id);
+  if(p) p.active=p.active===false?true:false;
+  saveDB(); refreshRosterUI();
+}
+
+function deletePlayer(id){
+  if(!confirm('Tanggalin ang player na ito?')) return;
+  DB.players=DB.players.filter(p=>p.id!==id);
+  saveDB(); refreshRosterUI();
+}
+
+// ════════════════════════════════════════════════════════════
+//  CARD GENERATION
+// ════════════════════════════════════════════════════════════
+function seededRand(seed){
+  let s=seed;
+  return()=>{s=(s*9301+49297)%233280;return s/233280;};
+}
+
+function generateCard(seed){
+  const rand=seededRand(seed);
+  const grid=[];
+  LETTERS.forEach(l=>{
+    const [s,e]=COL_RANGES[l];
+    const pool=Array.from({length:e-s+1},(_,i)=>s+i);
+    for(let i=pool.length-1;i>0;i--){const j=Math.floor(rand()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
+    grid.push(...pool.slice(0,5));
+  });
+  // column-major → row-major
+  const rm=[];
+  for(let r=0;r<5;r++) for(let c=0;c<5;c++) rm.push(grid[c*5+r]);
+  rm[12]='FREE';
+  return rm;
+}
+
+function generatePlayerCards(player, gameId){
+  const cards=[];
+  for(let i=0;i<player.maxCards;i++){
+    let seed=0;
+    const str=`${player.id}-${gameId}-card${i}`;
+    for(let j=0;j<str.length;j++) seed+=str.charCodeAt(j)*(j+7);
+    cards.push({cardIndex:i,grid:generateCard(seed)});
+  }
+  return cards;
+}
+
+// ════════════════════════════════════════════════════════════
+//  GAME ENGINE
+// ════════════════════════════════════════════════════════════
+function allNumbers(){
+  const nums=[];
+  LETTERS.forEach(l=>{const[s,e]=COL_RANGES[l];for(let n=s;n<=e;n++) nums.push({letter:l,num:n,full:`${l}${n}`});});
+  return nums;
+}
+
+function adminNewPattern(){
+  const idx=Math.floor(Math.random()*PATTERNS.length);
+  DB.game.pattern=PATTERNS[idx];
+  saveDB();
+  renderAdminPattern();
+  adminLog(`Pattern changed: ${DB.game.pattern.name}`,'info');
+}
+
+// ════════════════════════════════════════════════════════════
+//  PRE-GAME PATTERN SETUP (admin manually picks/draws next pattern)
+// ════════════════════════════════════════════════════════════
+let customPatternCells = Array(25).fill(false);
+customPatternCells[12] = true; // center FREE always on
+
+function populatePresetPicker(){
+  const sel = document.getElementById('presetPickerSelect');
+  if(!sel) return;
+  sel.innerHTML = PATTERNS.map((p,i)=>`<option value="${i}">${p.name}</option>`).join('');
+}
+
+function onPatternModeChange(){
+  const mode = document.getElementById('patternModeSelect').value;
+  document.getElementById('presetPickerWrap').style.display = mode==='preset' ? 'block' : 'none';
+  document.getElementById('customPickerWrap').style.display = mode==='custom' ? 'block' : 'none';
+  if(mode==='custom') renderCustomPatternEditor();
+}
+
+function renderCustomPatternEditor(){
+  const grid = document.getElementById('customPatternEditor');
+  if(!grid) return;
+  grid.innerHTML='';
+  customPatternCells.forEach((on,i)=>{
+    const isCenter = i===12;
+    const cell=document.createElement('div');
+    cell.className=`pcell editable${on?' on':''}${isCenter?' center':''}`;
+    if(!isCenter){
+      cell.onclick=()=>{
+        customPatternCells[i]=!customPatternCells[i];
+        renderCustomPatternEditor();
+      };
+    }
+    grid.appendChild(cell);
+  });
+}
+
+function clearCustomPattern(){
+  customPatternCells = Array(25).fill(false);
+  customPatternCells[12]=true;
+  renderCustomPatternEditor();
+}
+
+// Called only when starting a NEW game — reads whatever mode the admin picked
+function resolveSelectedPattern(){
+  const modeEl = document.getElementById('patternModeSelect');
+  const mode = modeEl ? modeEl.value : 'random';
+
+  if(mode==='preset'){
+    const idx = parseInt(document.getElementById('presetPickerSelect').value);
+    return PATTERNS[idx] || PATTERNS[0];
+  }
+  if(mode==='custom'){
+    const hasAnyMark = customPatternCells.some((v,i)=>v&&i!==12);
+    if(!hasAnyMark){
+      // nothing drawn — fall back to random rather than an empty pattern
+      return PATTERNS[Math.floor(Math.random()*PATTERNS.length)];
+    }
+    return { name:'Custom Pattern', cells:[...customPatternCells] };
+  }
+  // default: random
+  return PATTERNS[Math.floor(Math.random()*PATTERNS.length)];
+}
+
+// Lock/unlock the pattern setup panel based on whether a game is active
+function syncPatternSetupAvailability(){
+  const panel = document.getElementById('patternSetupPanel');
+  if(!panel) return;
+  const g = DB.game;
+  const locked = !!(g && g.active && !g.ended);
+  panel.style.opacity = locked ? '0.4' : '1';
+  panel.style.pointerEvents = locked ? 'none' : 'auto';
+  const hint = locked ? ' (locked — game in progress)' : '';
+  const titleEl = panel.querySelector('.panel-title');
+  if(titleEl) titleEl.textContent = '🎯 Set Next Pattern' + hint;
+}
+
+function checkWin(grid,pattern,calledSet){
+  return pattern.cells.every((on,i)=>!on||(grid[i]==='FREE')||calledSet.has(`${LETTERS[Math.floor(i/5)]}${grid[i]}`));
+}
+
+// Player's own manual marks vs pattern — used ONLY to enable their BINGO button.
+// This does NOT determine the real winner; admin's true calledSet does that.
+function checkWinManual(grid,pattern,marks){
+  marks = marks || {};
+  return pattern.cells.every((on,i)=> !on || grid[i]==='FREE' || !!marks[i]);
+}
+
+function adminStartGame(){
+  if(DB.players.filter(p=>p.active!==false).length===0){
+    alert('Walang active na player! Magdagdag muna ng players sa Roster tab.');return;
+  }
+  const gameId=generateId();
+  const pattern=resolveSelectedPattern();
+  const activePlayers=DB.players.filter(p=>p.active!==false);
+  const playerCards={};
+  activePlayers.forEach(p=>{playerCards[p.id]=generatePlayerCards(p,gameId);});
+
+  DB.game={
+    id:gameId,active:true,ended:false,
+    drawnNumbers:[],calledSet:[],
+    pattern,playerCards,
+    playerMarks:{}, // {playerId: {cardIndex: {cellIndex: emoji}}}
+    startedAt:Date.now(),
+    lastDrawAt:null,
+    claimedBy:null,
+  };
+  saveDB();
+  refreshAdminGame();
+  adminLog('🎉 New game started!','ok');
+  document.getElementById('adminGameBadge').style.display='inline-block';
+  postToSlack(buildStartMessage());
+  startAdminTimer();
+}
+
+function adminDrawNumber(){
+  if(!DB.game||!DB.game.active||DB.game.ended) return;
+  const called=new Set(DB.game.calledSet);
+  const pool=allNumbers().filter(x=>!called.has(x.full));
+  if(pool.length===0){adminLog('Lahat ng numero ay natawag na!','info');return;}
+  const pick=pool[Math.floor(Math.random()*pool.length)];
+  DB.game.drawnNumbers.push(pick);
+  DB.game.calledSet.push(pick.full);
+  DB.game.lastDrawAt=Date.now();
+  saveDB();
+  refreshAdminGame();
+  const callout=CALLOUTS[pick.full]||`${pick.full}!`;
+  adminLog(`Drew: ${pick.full}`,'info');
+  document.getElementById('adminTagline').textContent=callout;
+  postToSlack(buildDrawMessage(pick,DB.game.drawnNumbers.length,callout));
+  // Check winners
+  checkAllWinners();
+  // reset timer
+  startAdminTimer();
+}
+
+function checkAllWinners(){
+  if(!DB.game) return;
+  const calledSet=new Set(DB.game.calledSet);
+  const winners=[];
+  DB.players.filter(p=>p.active!==false).forEach(p=>{
+    if(!DB.game||!DB.game.playerCards) return;
+    const cards=DB.game.playerCards[p.id]||[];
+    cards.forEach((card,ci)=>{
+      if(card&&card.grid&&checkWin(card.grid,DB.game.pattern,calledSet)) winners.push({player:p,cardIndex:ci});
+    });
+  });
+  if(winners.length>0){
+    const names=winners.map(w=>`${w.player.name} (Card ${w.cardIndex+1})`).join(', ');
+    adminLog(`🏆 Potential winner(s): ${names}`,'ok');
+  }
+}
+
+function adminBingoClaim(){
+  const claimant=prompt('Sino ang nag-BINGO? (Enter name or leave blank):')||'Isang Bayani';
+  adminEndGame(claimant);
+}
+
+function adminEndGame(claimant){
+  if(!DB.game) return;
+  DB.game.active=false;DB.game.ended=true;DB.game.claimedBy=claimant;
+  DB.game.endedAt=Date.now();
+  saveDB();
+  clearInterval(adminTimer);clearInterval(adminCountdown);
+  document.getElementById('adminDrawBtn').disabled=true;
+  document.getElementById('adminBingoBtn').disabled=true;
+  document.getElementById('adminPatternBtn').disabled=true;
+  document.getElementById('adminStartBtn').disabled=false;
+  document.getElementById('adminGameBadge').style.display='none';
+  document.getElementById('winModalText').textContent=`${claimant} ang nananalo! Congratulations! 🎉`;
+  document.getElementById('winPatternText').textContent=`Pattern: ${DB.game.pattern.name}`;
+  document.getElementById('winOverlay').classList.add('show');
+  adminLog(`🏆 Game ended — BINGO: ${claimant}`,'ok');
+  postToSlack(buildWinMessage(claimant));
+  refreshAdminGame();
+}
+
+function adminResetGame(){
+  if(!confirm('I-reset ang laro? Mabubura ang kasalukuyang game.')) return;
+  clearInterval(adminTimer);clearInterval(adminCountdown);
+  DB.game=null;saveDB();
+  refreshAdminGame();
+  document.getElementById('adminGameBadge').style.display='none';
+  adminLog('Game reset.','info');
+}
+
+// ════════════════════════════════════════════════════════════
+//  ADMIN UI REFRESH
+// ════════════════════════════════════════════════════════════
+function refreshAdminGame(){
+  const g=DB.game;
+  const startBtn=document.getElementById('adminStartBtn');
+  const drawBtn=document.getElementById('adminDrawBtn');
+  const patBtn=document.getElementById('adminPatternBtn');
+  const bingoBtn=document.getElementById('adminBingoBtn');
+
+  syncPatternSetupAvailability();
+
+  if(!g){
+    startBtn.disabled=false;drawBtn.disabled=true;patBtn.disabled=true;bingoBtn.disabled=true;
+    document.getElementById('adminBigBall').className='big-ball empty';
+    document.getElementById('adminBigBall').innerHTML='<div class="ball-letter dim">—</div><div class="ball-number dim">—</div>';
+    document.getElementById('adminDrawnCount').textContent='0';
+    document.getElementById('adminCalledChips').innerHTML='';
+    document.getElementById('adminPatternName').textContent='—';
+    document.getElementById('adminPatternGrid').innerHTML='';
+    document.getElementById('adminCardsWrap').innerHTML='<div class="empty-state">Start a game to see player cards.</div>';
+    document.getElementById('adminStats').innerHTML='';
+    return;
+  }
+
+  startBtn.disabled=g.active||g.ended;
+  drawBtn.disabled=!g.active||g.ended;
+  patBtn.disabled=!g.active||g.ended;
+  bingoBtn.disabled=!g.active||g.ended;
+
+  // Ball
+  if(g.drawnNumbers.length>0){
+    const last=g.drawnNumbers[g.drawnNumbers.length-1];
+    const ball=document.getElementById('adminBigBall');
+    ball.className='big-ball pop';
+    ball.innerHTML=`<div class="ball-letter">${last.letter}</div><div class="ball-number">${last.num}</div>`;
+  }
+  document.getElementById('adminDrawnCount').textContent=g.drawnNumbers.length;
+
+  // Pattern
+  renderAdminPattern();
+
+  // Called chips
+  const chips=document.getElementById('adminCalledChips');
+  chips.innerHTML='';
+  [...g.drawnNumbers].reverse().forEach(x=>{
+    const d=document.createElement('div');d.className='chip';d.textContent=x.full;chips.appendChild(d);
+  });
+
+  // Stats
+  const calledSet=new Set(g.calledSet);
+  const activePlayers=DB.players.filter(p=>p.active!==false);
+  const totalCards=activePlayers.reduce((a,p)=>a+(g.playerCards[p.id]||[]).length,0);
+  const winners=[];
+  activePlayers.forEach(p=>(g.playerCards[p.id]||[]).forEach((c,ci)=>{
+    if(checkWin(c.grid,g.pattern,calledSet)) winners.push(`${p.name} #${ci+1}`);
+  }));
+  document.getElementById('adminStats').innerHTML=`
+    <div class="stat"><div class="stat-val">${g.drawnNumbers.length}</div><div class="stat-lbl">Drawn</div></div>
+    <div class="stat"><div class="stat-val">${activePlayers.length}</div><div class="stat-lbl">Players</div></div>
+    <div class="stat"><div class="stat-val">${totalCards}</div><div class="stat-lbl">Total Cards</div></div>
+    <div class="stat"><div class="stat-val" style="color:var(--success);">${winners.length}</div><div class="stat-lbl">Winners</div></div>
+  `;
+
+  // Cards
+  renderAllCards();
+}
+
+function renderAdminPattern(){
+  if(!DB.game) return;
+  const pg=document.getElementById('adminPatternGrid');
+  pg.innerHTML='';
+  document.getElementById('adminPatternName').textContent=DB.game.pattern.name;
+  DB.game.pattern.cells.forEach(on=>{
+    const d=document.createElement('div');d.className=`pcell${on?' on':''}`;pg.appendChild(d);
+  });
+}
+
+function renderAllCards(){
+  const g=DB.game;if(!g) return;
+  const calledSet=new Set(g.calledSet);
+  const wrap=document.getElementById('adminCardsWrap');
+  wrap.innerHTML='';
+  DB.players.filter(p=>p.active!==false).forEach(p=>{
+    const cards=(g.playerCards&&g.playerCards[p.id])||[];
+    cards.forEach((card,ci)=>{
+      if(!card||!card.grid) return;
+      const winner=checkWin(card.grid,g.pattern,calledSet);
+      wrap.appendChild(makeBingoCardEl(p.name,`Card ${ci+1}`,card.grid,calledSet,g.pattern,winner));
+    });
+  });
+}
+
+function makeBingoCardEl(agentName,cardLabel,grid,calledSet,pattern,isWinner,opts){
+  opts = opts || {};
+  const interactive = !!opts.interactive;
+  const marks = opts.marks || {}; // {cellIndex: emoji}
+  const onCellClick = opts.onCellClick; // function(cardIndex, cellIndex)
+  const cardIndex = opts.cardIndex;
+
+  const div=document.createElement('div');
+  div.className=`bingo-card${isWinner?' winner':''}`;
+  div.innerHTML=`
+    <div class="card-agent">${agentName}</div>
+    <div class="card-num">${cardLabel}</div>
+    <div class="card-header-row">${LETTERS.map(l=>`<div class="card-ltr">${l}</div>`).join('')}</div>
+    <div class="card-grid">
+      ${grid.map((val,i)=>{
+        const isFree=val==='FREE';
+        const letter=LETTERS[Math.floor(i/5)];
+        const full=`${letter}${val}`;
+        const isCalled=isFree||calledSet.has(full);
+        const isPwin=isWinner&&pattern.cells[i]&&isCalled;
+        const mark=marks[i];
+        let cls='ccell';
+        if(isFree) cls+=' free';
+        else if(isPwin) cls+=' pwin';
+        else if(interactive && mark) cls+=' marked';
+        else if(!interactive && isCalled) cls+=' called';
+        const clickAttr = (interactive && !isFree) ? ` data-cell="${i}" data-card="${cardIndex}"` : '';
+        const content = isFree ? 'FREE<br>★' : (interactive && mark ? `<span class="cell-num">${val}</span><span class="cell-mark">${mark}</span>` : val);
+        return `<div class="${cls}"${clickAttr}>${content}</div>`;
+      }).join('')}
+    </div>
+  `;
+  if(interactive && onCellClick){
+    div.querySelectorAll('[data-cell]').forEach(cellEl=>{
+      cellEl.addEventListener('click', ()=>{
+        onCellClick(parseInt(cellEl.dataset.card), parseInt(cellEl.dataset.cell));
+      });
+    });
+  }
+  return div;
+}
+
+// ════════════════════════════════════════════════════════════
+//  DASHBOARD
+// ════════════════════════════════════════════════════════════
+function refreshDashboard(){
+  const g=DB.game;
+  const el=document.getElementById('dashboardContent');
+  if(!g){el.innerHTML='<div class="empty-state">No active game.</div>';return;}
+  const calledSet=new Set(g.calledSet);
+  const activePlayers=DB.players.filter(p=>p.active!==false);
+  let rows='';
+  activePlayers.forEach(p=>{
+    const cards=g.playerCards[p.id]||[];
+    const wCards=cards.filter((c,ci)=>checkWin(c.grid,g.pattern,calledSet));
+    const matched=cards.map(c=>c.grid.filter((v,i)=>{
+      if(v==='FREE') return false;
+      return calledSet.has(`${LETTERS[Math.floor(i/5)]}${v}`);
+    }).length);
+    rows+=`<tr>
+      <td style="font-weight:600;">${p.name}</td>
+      <td>${cards.length}</td>
+      <td>${matched.join(' / ')} hits</td>
+      <td>${wCards.length>0?'<span class="winner-badge">🏆 BINGO!</span>':'—'}</td>
+    </tr>`;
+  });
+  el.innerHTML=`
+    <div class="info-box">Pattern: <strong>${g.pattern.name}</strong> · Drawn: <strong>${g.drawnNumbers.length}/75</strong> · ${g.ended?'<span style="color:var(--danger)">Ended</span>':'<span style="color:var(--success)">Live</span>'}</div>
+    <div style="overflow-x:auto;"><table class="roster-table">
+      <thead><tr><th>Player</th><th>Cards</th><th>Hits</th><th>Status</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>
+  `;
+}
+
+// ════════════════════════════════════════════════════════════
+//  AUTO-DRAW TIMER
+// ════════════════════════════════════════════════════════════
+function isWithinShift(){
+  const h=new Date().getHours();
+  return h>=21||h<5;
+}
+
+function startAdminTimer(){
+  clearInterval(adminTimer);clearInterval(adminCountdown);
+  const ms=DB.drawIntervalMin*60*1000;
+  nextDrawAt=Date.now()+ms;
+  adminSecondsLeft=Math.round(ms/1000);
+  updateAdminTimerDisplay();
+  adminCountdown=setInterval(()=>{
+    adminSecondsLeft=Math.max(0,Math.round((nextDrawAt-Date.now())/1000));
+    updateAdminTimerDisplay();
+  },1000);
+  adminTimer=setInterval(()=>{
+    if(!DB.game||!DB.game.active||DB.game.ended) return;
+    if(isWithinShift()) adminDrawNumber();
+    else adminLog('Outside shift hours — auto-draw skipped.','info');
+    nextDrawAt=Date.now()+ms;
+  },ms);
+}
+
+function updateAdminTimerDisplay(){
+  const m=Math.floor(adminSecondsLeft/60);
+  const s=adminSecondsLeft%60;
+  document.getElementById('adminTimerDisplay').textContent=
+    `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+// ════════════════════════════════════════════════════════════
+//  PLAYER SCREEN
+// ════════════════════════════════════════════════════════════
+function showPlayerScreen(){
+  showScreen('screen-player');
+  document.getElementById('playerName').textContent=currentPlayer.name;
+  document.getElementById('playerWelcome').textContent=`Kamusta, ${currentPlayer.name}? Handa ka na ba mag-BINGO? 🎯`;
+  refreshPlayerScreen();
+  // Poll for game updates
+  if(window._playerPoll) clearInterval(window._playerPoll);
+  window._playerPoll=setInterval(refreshPlayerScreen,5000);
+}
+
+// Selected emoji marker per player (persisted to localStorage, separate from game data)
+const EMOJI_OPTIONS = ['✅','🔴','⭐','🔥','💯','💚','❌','🟡'];
+function getPlayerEmoji(){
+  try { return localStorage.getItem('smbBingoEmoji_'+(currentPlayer?currentPlayer.id:'')) || '✅'; }
+  catch(e){ return '✅'; }
+}
+function setPlayerEmoji(em){
+  try { localStorage.setItem('smbBingoEmoji_'+(currentPlayer?currentPlayer.id:''), em); } catch(e){}
+}
+
+function renderEmojiPalette(){
+  const pal = document.getElementById('emojiPalette');
+  if(!pal) return;
+  const current = getPlayerEmoji();
+  pal.innerHTML = '';
+  EMOJI_OPTIONS.forEach(em=>{
+    const btn = document.createElement('div');
+    btn.className = `emoji-opt${em===current?' selected':''}`;
+    btn.textContent = em;
+    btn.onclick = ()=>{ setPlayerEmoji(em); renderEmojiPalette(); };
+    pal.appendChild(btn);
+  });
+}
+
+function toggleCellMark(cardIndex, cellIndex){
+  if(!currentPlayer || !DB.game) return;
+  const g = DB.game;
+  if(!g.playerMarks) g.playerMarks = {};
+  if(!g.playerMarks[currentPlayer.id]) g.playerMarks[currentPlayer.id] = {};
+  if(!g.playerMarks[currentPlayer.id][cardIndex]) g.playerMarks[currentPlayer.id][cardIndex] = {};
+
+  const cellMarks = g.playerMarks[currentPlayer.id][cardIndex];
+  if(cellMarks[cellIndex]){
+    delete cellMarks[cellIndex]; // tap again to unmark
+  } else {
+    cellMarks[cellIndex] = getPlayerEmoji();
+  }
+  saveDB();
+  refreshPlayerScreen();
+}
+
+function refreshPlayerScreen(){
+  if(!currentPlayer) return; // guard: poll may fire after logout
+  loadDB(); // reload from storage
+  // Re-sync currentPlayer from fresh DB so stale reference doesn't bite us
+  const fresh = DB.players.find(p=>p.id===currentPlayer.id);
+  if(!fresh){ currentPlayer=null; return; }
+  currentPlayer = fresh;
+
+  renderEmojiPalette();
+
+  const g=DB.game;
+  const bingoBtn=document.getElementById('playerBingoBtn');
+
+  if(!g||(!g.active&&!g.ended)){
+    document.getElementById('playerCardsWrap').innerHTML='<div class="empty-state">Waiting for the host to start the game... 🌙</div>';
+    bingoBtn.disabled=true;
+    document.getElementById('playerLastDraw').textContent='Waiting for draw...';
+    document.getElementById('playerTagline').textContent='—';
+    return;
+  }
+
+  const calledSet=new Set(g.calledSet); // true called numbers — NOT shown to player on cards
+  const cards=g.playerCards[currentPlayer.id]||[];
+  const myMarks=(g.playerMarks&&g.playerMarks[currentPlayer.id])||{};
+
+  // Ball — players still see what was drawn, they just have to mark it themselves
+  if(g.drawnNumbers.length>0){
+    const last=g.drawnNumbers[g.drawnNumbers.length-1];
+    const ball=document.getElementById('playerBigBall');
+    ball.className='big-ball pop';
+    ball.style.width='80px';ball.style.height='80px';
+    ball.innerHTML=`<div class="ball-letter" style="font-size:16px;">${last.letter}</div><div class="ball-number" style="font-size:34px;">${last.num}</div>`;
+    document.getElementById('playerLastDraw').textContent=last.full;
+    document.getElementById('playerTagline').textContent=CALLOUTS[last.full]||`${last.full}!`;
+  }
+  document.getElementById('playerCalledSummary').textContent=
+    `Called: ${g.drawnNumbers.map(x=>x.full).join(' · ')||'None yet'}`;
+
+  // Cards — render with player's OWN marks, not auto-highlighted from calledSet
+  const wrap=document.getElementById('playerCardsWrap');
+  wrap.innerHTML='';
+  let anyWin=false;
+  const emptyCalledSet = new Set(); // pass empty set so "called" styling never auto-applies
+  cards.forEach((card,ci)=>{
+    const cardMarks = myMarks[ci] || {};
+    const win=checkWinManual(card.grid,g.pattern,cardMarks);
+    if(win) anyWin=true;
+    wrap.appendChild(makeBingoCardEl(
+      currentPlayer.name, `Card ${ci+1}`, card.grid, emptyCalledSet, g.pattern, win,
+      { interactive:true, marks:cardMarks, cardIndex:ci, onCellClick:toggleCellMark }
+    ));
+  });
+
+  if(cards.length===0) wrap.innerHTML='<div class="empty-state">Walang card para sa\'yo sa game na ito. Makipag-ugnayan sa admin.</div>';
+
+  // BINGO button — enabled only when player's OWN marks complete the pattern
+  bingoBtn.disabled=!g.active||g.ended||!anyWin;
+  if(anyWin&&g.active&&!g.ended){
+    bingoBtn.style.animation='ballPop .5s ease forwards';
+  }
+
+  if(g.ended){
+    playerLog(`Game ended — ${g.claimedBy||'someone'} ang nanalo!`,'info');
+    bingoBtn.disabled=true;
+  }
+}
+
+function playerClaimBingo(){
+  loadDB();
+  const g=DB.game;
+  if(!g||!g.active||g.ended||!currentPlayer) return;
+
+  const calledSet=new Set(g.calledSet); // the real, true called numbers
+  const cards=g.playerCards[currentPlayer.id]||[];
+  const myMarks=(g.playerMarks&&g.playerMarks[currentPlayer.id])||{};
+
+  // Find which of the player's cards they believe has won, and cross-check vs real calledSet
+  let claimedCardIndex=-1, verifiedAgainstReal=false;
+  cards.forEach((card,ci)=>{
+    const cardMarks=myMarks[ci]||{};
+    if(checkWinManual(card.grid,g.pattern,cardMarks) && claimedCardIndex===-1){
+      claimedCardIndex=ci;
+      verifiedAgainstReal=checkWin(card.grid,g.pattern,calledSet);
+    }
+  });
+
+  playerLog(`Nag-claim ng BINGO si ${currentPlayer.name}! Hintayin ang admin na i-confirm... 🏆`,'ok');
+
+  const verifyLine = verifiedAgainstReal
+    ? '✅ _Cross-check: marks match the real called numbers._'
+    : '⚠️ _Cross-check: marks do NOT fully match the real called list — please verify manually before confirming!_';
+
+  postToSlack(`🙋 *BINGO CLAIM!*\n\n*${currentPlayer.name}* claims BINGO on Card ${claimedCardIndex+1}!\n\nPattern: *${g.pattern.name}*\nDraw #${g.drawnNumbers.length}\n\n${verifyLine}\n\n_Admin: Please verify on the Game Control tab and end the game! 🏆_`);
+
+  document.getElementById('playerBingoBtn').disabled=true;
+  document.getElementById('playerBingoBtn').textContent='✅ Claimed! Waiting for admin...';
+}
+
+function playerLog(msg,type='info'){
+  const panel=document.getElementById('playerLog');
+  const now=new Date();
+  const t=now.toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit',hour12:true});
+  const d=document.createElement('div');d.className='log-row';
+  d.innerHTML=`<span class="log-t">${t}</span><span class="log-m ${type}">${msg}</span>`;
+  panel.insertBefore(d,panel.firstChild);
+}
+
+// ════════════════════════════════════════════════════════════
+//  ADMIN LOG
+// ════════════════════════════════════════════════════════════
+function adminLog(msg,type='info'){
+  const panel=document.getElementById('adminLog');
+  const now=new Date();
+  const t=now.toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit',hour12:true});
+  const d=document.createElement('div');d.className='log-row';
+  d.innerHTML=`<span class="log-t">${t}</span><span class="log-m ${type}">${msg}</span>`;
+  panel.insertBefore(d,panel.firstChild);
+}
+
+// ════════════════════════════════════════════════════════════
+//  SETTINGS
+// ════════════════════════════════════════════════════════════
+function saveSettings(){
+  const pin=document.getElementById('settingsAdminPin').value.trim();
+  const interval=parseInt(document.getElementById('settingsInterval').value);
+  const webhook=document.getElementById('settingsWebhook').value.trim();
+  const proxy=document.getElementById('settingsProxyUrl').value.trim();
+  if(pin&&!/^\d{4}$/.test(pin)){alert('PIN ay dapat 4 digits!');return;}
+  if(pin) DB.adminPin=pin;
+  if(interval>=5&&interval<=60) DB.drawIntervalMin=interval;
+  if(webhook) DB.webhookUrl=webhook;
+  DB.proxyUrl=proxy; // can be cleared intentionally, so no truthy guard
+  saveDB();
+  document.getElementById('settingsSaved').textContent='✅ Settings saved!';
+  setTimeout(()=>document.getElementById('settingsSaved').textContent='',3000);
+}
+
+async function testSlackConnection(){
+  const statusEl=document.getElementById('testSlackStatus');
+  statusEl.textContent='Sending...';
+  statusEl.style.color='var(--muted)';
+  await postToSlack('🧪 *Test message from SMB BINGO Admin Settings.* Kung nakikita mo ito, gumagana ang connection! ✅');
+  // postToSlack updates adminSlackStatus; mirror it here too
+  const adminStatus=document.getElementById('adminSlackStatus');
+  if(adminStatus){
+    statusEl.textContent=adminStatus.textContent;
+    statusEl.style.color=adminStatus.className.includes('ok')?'var(--success)':'var(--danger)';
+  }
+}
+
+function clearAllData(){
+  if(!confirm('I-clear lahat ng data? Hindi ito mababawi!')) return;
+  localStorage.removeItem('smbBingoDB');
+  DB={adminPin:'0000',webhookUrl:'https://hooks.slack.com/services/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',proxyUrl:'',drawIntervalMin:30,players:[],game:null};
+  refreshRosterUI();refreshAdminGame();
+  alert('Data cleared! Back to zero.');
+}
+
+// ════════════════════════════════════════════════════════════
+//  SLACK MESSAGES
+// ════════════════════════════════════════════════════════════
+function buildStartMessage(){
+  const p=DB.game.pattern;
+  return `🌙 *SMB BAYANING PUYAT — BINGO NIGHT SIMULA NA!* 🎉\n\n` +
+    `Handa na ba kayong lahat? Log in na sa inyong player portal!\n\n` +
+    `🎯 *Pattern ngayong gabi:* ${p.name}\n` +
+    `⏰ Bawat 30 minuto, may bagong numero!\n` +
+    `🏆 Manalo ka? I-click ang BINGO button sa iyong screen!\n\n` +
+    `Mapalad nawa kayo, mga Bayaning Puyat! Kaya natin 'to! 💪🌟`;
+}
+
+function buildDrawMessage(pick, round, callout){
+  const g=DB.game;
+  const called=g.drawnNumbers.map(x=>x.full).join(' · ');
+  return `🎱 *DRAW #${round}*\n\n${callout}\n\n📋 Lahat ng natawag:\n${called}\n\n_May BINGO ka na ba? I-claim sa iyong player screen! 🏆_`;
+}
+
+// ════════════════════════════════════════════════════════════
+//  WITTY WINNER ANNOUNCEMENTS — randomized mix of hype-man,
+//  roast-style Filipino humor, and game-show drama
+// ════════════════════════════════════════════════════════════
+function buildWinMessage(claimant){
+  const g=DB.game;
+  const drawCount=g.drawnNumbers.length;
+  const calledList=g.drawnNumbers.map(x=>x.full).join(' · ');
+  const patternName=g.pattern.name;
+
+  const styles=[ buildHypeManWin, buildRoastWin, buildGameShowWin ];
+  const pick=styles[Math.floor(Math.random()*styles.length)];
+  return pick(claimant, drawCount, calledList, patternName);
+}
+
+// Style 1: WILD MANIC HYPE-MAN
+function buildHypeManWin(claimant, drawCount, calledList, patternName){
+  const openers=[
+    `🚨🚨🚨 STOP EVERYTHING! 🚨🚨🚨`,
+    `📢📢📢 OOOOOOOH MY GAAAD! 📢📢📢`,
+    `🎉🎉🎉 SUMISIGAW ANG BUONG SLACK CHANNEL! 🎉🎉🎉`,
+    `🔥🔥🔥 PUTOK NA PUTOK ANG LARO! 🔥🔥🔥`,
+  ];
+  const lines=[
+    `WE. HAVE. A. WINNERRRRR! 🏆🏆🏆`,
+    `*${claimant.toUpperCase()}* JUST WON THE ENTIRE GAME AND PROBABLY THE ENTIRE NIGHT SHIFT TOO!! 💥`,
+    `Hinampas ng swerte si *${claimant}* nang sobrang lakas, umalingawngaw sa buong office! 🌪️`,
+    `Crowd goes WILD! 🙌🙌🙌 (the crowd is just us, in this Slack channel, at 2AM, but STILL WILD!)`,
+  ];
+  return `${openers[Math.floor(Math.random()*openers.length)]}\n\n` +
+    `${lines[Math.floor(Math.random()*lines.length)]}\n\n` +
+    `🎯 Pattern: *${patternName}*\n🎱 Natapos sa Draw #${drawCount}!\n📋 Called: ${calledList}\n\n` +
+    `LEVEL UP NA SI *${claimant.toUpperCase()}* SA LIFE! 🚀🚀🚀 Bayaning Puyat Champion ka na ngayong gabi! 👑🌙\n\n` +
+    `_(Confetti emoji activated. Imagine it. 🎊🎊🎊)_`;
+}
+
+// Style 2: WITTY ROAST-STYLE (playful jabs, Filipino humor)
+function buildRoastWin(claimant, drawCount, calledList, patternName){
+  const roasts=[
+    `Hala, si *${claimant}* pala may swerte sa BINGO — sa trabaho kaya, meron din? 😏 Char lang, congrats!`,
+    `Grabe, mas mabilis pa mag-bingo si *${claimant}* kaysa mag-submit ng report. Pero okay lang, panalo eh! 😂`,
+    `*${claimant}* — sa wakas may napanalunan ka rin dito sa office, hindi lang yung extra shift. 🏆😅`,
+    `Nakakainggit, may swerte pa rin pala kahit alas-3 ng umaga na. Si *${claimant}* ang patunay! ☕🌙`,
+  ];
+  const taunts=[
+    `Sa lahat ng tao dito, ikaw pa! Pero deserve mo naman, di ba? 😤`,
+    `Sigurado ka bang hindi ka nandadaya? Char, BINGO verified na 'to! ✅`,
+    `Sana all maging ganyan ka-swerte... pero hindi, isa lang ang panalo dito. 💅`,
+  ];
+  return `🏆 *MAY NANALO — AT GRABE ANG TIBAY NG SUWERTE!* 🏆\n\n` +
+    `${roasts[Math.floor(Math.random()*roasts.length)]}\n\n${taunts[Math.floor(Math.random()*taunts.length)]}\n\n` +
+    `🎯 Pattern: *${patternName}*\n🎱 Draws: ${drawCount}\n📋 Called: ${calledList}\n\n` +
+    `Congrats talaga, *${claimant}*! Bayani ka ng gabi na 'to! 🌙🎊 (Treat naman jan sa susunod na payday, ha? 👀)`;
+}
+
+// Style 3: GAME-SHOW HOST DRAMA (epic build-up, suspense, big reveal)
+function buildGameShowWin(claimant, drawCount, calledList, patternName){
+  const buildups=[
+    `🎙️ *"Ladies and gentlemen... mga Bayaning Puyat..."* 🎙️`,
+    `🎬 *The tension was UNBEARABLE. The office held its breath...* 🎬`,
+    `🎙️ *"After ${drawCount} dramatic draws... the moment we've all been waiting for..."* 🎙️`,
+  ];
+  const reveals=[
+    `🥁🥁🥁 *D R U M R O L L* 🥁🥁🥁\n\n...AND THE WINNER IS...\n\n✨🏆 *${claimant.toUpperCase()}* 🏆✨`,
+    `🎆 The lights dim. The spotlight finds one name. 🎆\n\nIt's... it's...\n\n👑 *${claimant.toUpperCase()}* 👑\n\nTHE CHAMPION OF THE NIGHT!`,
+    `In a stunning turn of events that NO ONE saw coming (okay, maybe some did)...\n\n🌟 *${claimant.toUpperCase()}* 🌟 takes home the BINGO crown!`,
+  ];
+  return `${buildups[Math.floor(Math.random()*buildups.length)]}\n\n` +
+    `${reveals[Math.floor(Math.random()*reveals.length)]}\n\n` +
+    `🎯 Winning Pattern: *${patternName}*\n🎱 Sealed the deal on Draw #${drawCount}\n📋 Full call sheet: ${calledList}\n\n` +
+    `*Roll credits.* 🎬 *Cue the applause.* 👏👏👏 A legend is born tonight in the SMB Bayaning Puyat arena! 🌙🏆\n\n` +
+    `_Same time tomorrow night? The crown is up for grabs again! 😏_`;
+}
+
+// ════════════════════════════════════════════════════════════
+//  SLACK DELIVERY — routes through Render proxy if configured,
+//  falls back to direct webhook fetch otherwise
+// ════════════════════════════════════════════════════════════
+async function postToSlack(text){
+  const status=document.getElementById('adminSlackStatus');
+  const useProxy = !!(DB.proxyUrl && DB.proxyUrl.trim());
+
+  try{
+    let resp;
+    if(useProxy){
+      resp = await fetch(DB.proxyUrl.trim(), {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({ webhookUrl: DB.webhookUrl, payload: { text } })
+      });
+    } else {
+      resp = await fetch(DB.webhookUrl,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({text})
+      });
+    }
+
+    if(resp.ok||resp.status===0){
+      if(status){status.textContent=`✅ Slack post sent! ${useProxy?'(via proxy)':'(direct)'}`;status.className='slack-status ok';}
+    } else {
+      throw new Error(`HTTP ${resp.status}`);
+    }
+  }catch(e){
+    if(status){
+      status.textContent = useProxy
+        ? `⚠️ Proxy error: ${e.message}. Check the proxy URL/deployment.`
+        : `⚠️ Slack: CORS issue — set a Proxy URL in Settings for reliable delivery.`;
+      status.className='slack-status err';
+    }
+    adminLog&&adminLog(`Slack failed: ${e.message}`,'err');
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════════════════
+// Build empty pattern grid cells
+(function initPatternGrid(){
+  const pg=document.getElementById('adminPatternGrid');
+  if(pg){pg.innerHTML='';for(let i=0;i<25;i++){const d=document.createElement('div');d.className='pcell';pg.appendChild(d);}}
+  populatePresetPicker();
+  renderCustomPatternEditor();
+  syncPatternSetupAvailability();
+})();
+
+// ════════════════════════════════════════════════════════════
+//  PIN CHANGE (PLAYER SELF-SERVICE)
+// ════════════════════════════════════════════════════════════
+function openPinChange(){
+  document.getElementById('pcCurrentPin').value='';
+  document.getElementById('pcNewPin').value='';
+  document.getElementById('pcConfirmPin').value='';
+  document.getElementById('pcError').textContent='';
+  document.getElementById('pinChangeOverlay').classList.add('show');
+}
+
+function savePinChange(){
+  const cur=document.getElementById('pcCurrentPin').value.trim();
+  const nw=document.getElementById('pcNewPin').value.trim();
+  const conf=document.getElementById('pcConfirmPin').value.trim();
+  const errEl=document.getElementById('pcError');
+
+  if(!currentPlayer){errEl.textContent='Hindi logged in!';return;}
+  if(cur!==currentPlayer.pin){errEl.textContent='Maling current PIN!';return;}
+  if(!/^\d{4}$/.test(nw)){errEl.textContent='Ang bagong PIN ay dapat 4 digits lang!';return;}
+  if(nw!==conf){errEl.textContent='Hindi magkatugma ang bagong PIN!';return;}
+  if(nw===cur){errEl.textContent='Dapat iba ang bagong PIN sa dati!';return;}
+
+  // Check for duplicates — warn but allow (since shared 1234 is expected initially)
+  const dup=DB.players.find(p=>p.pin===nw&&p.id!==currentPlayer.id);
+  if(dup){
+    errEl.textContent='Yung PIN na iyon ay ginagamit na ng iba. Pumili ng iba.';
+    return;
+  }
+
+  // Update
+  const p=DB.players.find(x=>x.id===currentPlayer.id);
+  if(p){
+    p.pin=nw;
+    p.pinChanged=true;
+    currentPlayer=p;
+  }
+  saveDB();
+  document.getElementById('pinChangeOverlay').classList.remove('show');
+  playerLog('✅ PIN matagumpay na napalitan! Tandaan ang bagong PIN mo.','ok');
+  // Update welcome
+  document.getElementById('playerWelcome').textContent=`PIN changed! Handa ka na, ${currentPlayer.name}! 🎯`;
+}
+
+
+function adminResetPlayerPin(id){
+  if(!confirm('I-reset ang PIN ng player na ito sa 1234?')) return;
+  const p=DB.players.find(x=>x.id===id);
+  if(p){p.pin='1234';p.pinChanged=false;}
+  saveDB();refreshRosterUI();
+}
+
+function resetToDefaultRoster(){
+  if(!confirm('I-reset ang buong roster sa default players? Mabubura ang lahat ng changes!')) return;
+  DB.players=buildDefaultPlayers();
+  DB.game=null;
+  saveDB();
+  refreshRosterUI();
+  refreshAdminGame();
+  alert('Roster reset to default!');
+}
+// Add PIN-changed indicator to roster table
+function pinStatusBadge(p){
+  if(p.pinChanged) return '<span style="color:var(--success);font-size:10px;font-weight:700;">✓ PIN set</span>';
+  return '<span style="color:var(--gold);font-size:10px;font-weight:700;">⚠ Default PIN</span>';
+}
+</script>
+</body>
+</html>
