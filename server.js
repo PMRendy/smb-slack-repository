@@ -1,75 +1,73 @@
-// DIAGNOSTIC VERSION — temporary, for troubleshooting the /slack 404 issue.
-// This adds logging to every incoming request so we can see exactly what
-// Render is receiving, plus a few extra test routes to isolate the problem.
+// SMB Bayaning Puyat — Shared Backend + Slack Proxy
+// Solves two problems:
+// 1. CORS when posting to Slack directly from the browser (original purpose)
+// 2. Shared game state — so the admin and every player see the SAME live
+//    game, not their own private browser localStorage copy.
+//
+// State is stored in a simple JSON file on disk. Render's free tier disk is
+// ephemeral (wiped on redeploy/restart), which is fine for a nightly game —
+// just don't expect state to survive a server restart mid-game.
 
 const express = require('express');
 const cors = require('cors');
 const fetch = require('node-fetch');
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const DATA_FILE = path.join(__dirname, 'gamestate.json');
 
 app.use(cors());
-app.use(express.json({ limit: '1mb' }));
+app.use(express.json({ limit: '2mb' }));
 
-// Log EVERY incoming request so we can see it in the Render logs
-app.use((req, res, next) => {
-  console.log(`[REQUEST] ${req.method} ${req.url}`);
-  next();
-});
-
-app.get('/', (req, res) => {
-  res.status(200).json({ status: 'ok', service: 'smb-slack-proxy-DIAGNOSTIC', time: new Date().toISOString() });
-});
-
-// Simple test route with no logic — just to confirm POST routing works at all
-app.post('/ping', (req, res) => {
-  console.log('[PING] Received a POST to /ping');
-  res.status(200).json({ pong: true, receivedBody: req.body });
-});
-
-// The real route
-app.post('/slack', async (req, res) => {
-  console.log('[SLACK] Received a POST to /slack');
+// ─────────────────────────────────────────────────────────────
+//  SIMPLE FILE-BACKED STORE
+// ─────────────────────────────────────────────────────────────
+function loadState() {
   try {
-    const { webhookUrl, payload } = req.body || {};
-
-    if (!webhookUrl || typeof webhookUrl !== 'string' || !webhookUrl.startsWith('https://hooks.slack.com/services/')) {
-      console.log('[SLACK] Rejected: invalid webhookUrl', webhookUrl);
-      return res.status(400).json({ error: 'Invalid or missing webhookUrl. Must be a valid Slack webhook URL.' });
-    }
-    if (!payload || typeof payload !== 'object') {
-      console.log('[SLACK] Rejected: missing payload');
-      return res.status(400).json({ error: 'Missing payload object.' });
-    }
-
-    const slackResp = await fetch(webhookUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-
-    const text = await slackResp.text();
-    console.log('[SLACK] Slack responded with status', slackResp.status, text);
-
-    if (!slackResp.ok) {
-      return res.status(slackResp.status).json({ error: 'Slack rejected the request', detail: text });
-    }
-
-    return res.status(200).json({ ok: true, slackResponse: text });
-  } catch (err) {
-    console.error('[SLACK] Proxy error:', err);
-    return res.status(500).json({ error: 'Proxy failed to reach Slack', detail: String(err.message || err) });
+    if (!fs.existsSync(DATA_FILE)) return defaultState();
+    const raw = fs.readFileSync(DATA_FILE, 'utf8');
+    return JSON.parse(raw);
+  } catch (e) {
+    console.error('Failed to load state, using default:', e.message);
+    return defaultState();
   }
+}
+
+function saveState(state) {
+  fs.writeFileSync(DATA_FILE, JSON.stringify(state, null, 2));
+}
+
+function defaultState() {
+  return {
+    adminPin: '0000',
+    webhookUrl: '',
+    proxyUrl: '',
+    drawIntervalMin: 30,
+    players: [],
+    game: null,
+    updatedAt: Date.now(),
+  };
+}
+
+// In-memory cache, synced to disk on every write
+let DB = loadState();
+
+// ─────────────────────────────────────────────────────────────
+//  HEALTH CHECK
+// ─────────────────────────────────────────────────────────────
+app.get('/', (req, res) => {
+  res.status(200).json({ status: 'ok', service: 'smb-bingo-backend', time: new Date().toISOString() });
 });
 
-// Catch-all — logs anything that doesn't match a route above, including the real /slack
-// if something upstream is somehow not matching it correctly.
-app.use((req, res) => {
-  console.log(`[404 CATCH-ALL] No route matched: ${req.method} ${req.url}`);
-  res.status(404).json({ error: 'Not found (diagnostic catch-all)', method: req.method, url: req.url });
+// ─────────────────────────────────────────────────────────────
+//  SHARED GAME STATE — GET (everyone reads this) / POST (write/update)
+// ─────────────────────────────────────────────────────────────
+
+// Get the full shared state
+app.get('/state', (req, res) => {
+  res.status(200).json(DB);
 });
 
-app.listen(PORT, () => {
-  console.log(`SMB Slack proxy (DIAGNOSTIC) listening on port ${PORT}`);
-});
+// Replace the full shared state (used by admin actions: start game, draw, end game, settings, roster edits)
