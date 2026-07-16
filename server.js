@@ -68,8 +68,12 @@ function saveState(state) {
 
 // Smart game merge — called both by /state/merge and internally.
 // Ensures drawnNumbers, calledSet, and playerMarks can only grow, never shrink.
+// IMPORTANT: null incoming means intentional reset — honour it.
 function mergeGameState(existing, incoming) {
-  if (!incoming) return existing;
+  // null/undefined incoming on /state/merge = no game field sent = keep existing
+  // But on POST /state (full replace), incoming=null IS intentional — handled there
+  if (incoming === undefined) return existing;
+  if (incoming === null) return null; // intentional reset — clear the game
   if (!existing) return incoming;
 
   // If game IDs differ, incoming is a new game — replace fully
@@ -168,6 +172,7 @@ app.post('/state', (req, res) => {
 // POST /state/merge — CLIENT-SIDE smart merge endpoint
 // Use this for all game-progress writes (draws, marks, RSVPs).
 // Server merges with its own current state so nothing is ever lost.
+// Exception: if incoming.game is explicitly null, treat as reset.
 app.post('/state/merge', (req, res) => {
   try {
     const incoming = req.body;
@@ -175,10 +180,19 @@ app.post('/state/merge', (req, res) => {
       return res.status(400).json({ error: 'Invalid payload' });
     }
 
-    // Merge game state smartly
-    const mergedGame = mergeGameState(DB.game, incoming.game);
+    let mergedGame;
+    if ('game' in incoming && incoming.game === null) {
+      // Explicit null = intentional reset — clear the game on server too
+      mergedGame = null;
+      console.log('[STATE/MERGE] Explicit game reset received');
+    } else if (!('game' in incoming)) {
+      // game field not sent at all — keep existing
+      mergedGame = DB.game;
+    } else {
+      // Merge with existing
+      mergedGame = mergeGameState(DB.game, incoming.game);
+    }
 
-    // For non-game fields, incoming wins (settings, roster, etc.)
     DB = { ...DB, ...incoming, game: mergedGame, updatedAt: Date.now() };
     saveState(DB);
     res.json({ ok: true, updatedAt: DB.updatedAt, game: DB.game });
