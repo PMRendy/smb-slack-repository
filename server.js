@@ -137,8 +137,9 @@ app.get('/state', (req, res) => {
   res.json(DB);
 });
 
-// POST /state — replace state wholesale (admin full writes)
-// Still does a server-side smart merge on the game field to protect in-flight data
+// POST /state — replace state wholesale (admin full writes: reset, end game, start game)
+// Smart-merges the game field ONLY when both sides have a game with the same ID.
+// If incoming.game is null, it means intentional reset — allow it through.
 app.post('/state', (req, res) => {
   try {
     const incoming = req.body;
@@ -146,8 +147,15 @@ app.post('/state', (req, res) => {
       return res.status(400).json({ error: 'Invalid payload' });
     }
 
-    // Smart-merge the game field even on full state writes
-    const mergedGame = mergeGameState(DB.game, incoming.game);
+    let mergedGame;
+    if (incoming.game === null || incoming.game === undefined) {
+      // Intentional reset — wipe the game
+      mergedGame = null;
+    } else {
+      // Smart-merge only when both sides have a game with the same ID
+      mergedGame = mergeGameState(DB.game, incoming.game);
+    }
+
     DB = { ...incoming, game: mergedGame, updatedAt: Date.now() };
     saveState(DB);
     res.json({ ok: true, updatedAt: DB.updatedAt });
