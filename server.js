@@ -14,6 +14,16 @@ const path    = require('path');
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
+// ─── MARCUS GANZO POINTS INTEGRATION ──────────────────────────────────────────
+// Server-to-server only — lets a player spend Marcus points to buy an extra card.
+// Set these two env vars on this Render service to enable "Buy an Extra Card":
+//   MARCUS_BASE_URL = https://<your-marcus-render-url>
+//   MARCUS_SECRET   = same value as BINGO_INTEGRATION_SECRET on the Marcus service
+const MARCUS_BASE_URL = (process.env.MARCUS_BASE_URL || '').trim().replace(/\/+$/, '');
+const MARCUS_SECRET   = process.env.MARCUS_SECRET || '';
+const POINTS_PER_CARD = 5;
+const MAX_PURCHASED_CARDS_PER_SHIFT = 3;
+
 // Write to os.tmpdir() — avoids read-only __dirname on Render free tier.
 // State survives as long as the process stays alive.
 // On restart, browsers re-seed from their localStorage fallback.
@@ -116,6 +126,35 @@ function mergeGameState(existing, incoming) {
   const eCards = existing.playerCards || {};
   const iCards = incoming.playerCards || {};
   merged.playerCards = Object.keys(iCards).length >= Object.keys(eCards).length ? iCards : eCards;
+
+  // rsvpPlayerIds / skipPlayerIds: union, never drop someone's RSVP or skip.
+  // FIX: these two were previously NOT special-cased above, so they fell under the plain
+  // `{...existing, ...incoming}` spread — meaning whichever browser's save landed last
+  // simply overwrote the whole list. If two players tapped RSVP (or one RSVP'd and another
+  // skipped) within the same few seconds, one of them could silently vanish from the lobby
+  // list. Union-merging fixes that the same way drawnNumbers/playerMarks already were fixed.
+  const eRsvp = existing.rsvpPlayerIds || [];
+  const iRsvp = incoming.rsvpPlayerIds || [];
+  const eSkip = existing.skipPlayerIds || [];
+  const iSkip = incoming.skipPlayerIds || [];
+  // A player who appears in the freshest side's skip list is treated as having reversed
+  // their earlier RSVP (and vice versa) — whichever list they show up in on `incoming`
+  // (the just-submitted update) wins for that specific player.
+  const rsvpSet = new Set([...eRsvp, ...iRsvp]);
+  const skipSet = new Set([...eSkip, ...iSkip]);
+  iSkip.forEach(pid => rsvpSet.delete(pid)); // just switched to "not playing"
+  iRsvp.forEach(pid => skipSet.delete(pid)); // just switched to "playing"
+  merged.rsvpPlayerIds = [...rsvpSet];
+  merged.skipPlayerIds = [...skipSet];
+
+  // cardPurchases: {playerId: count} — grows-only per player (never decreases), same
+  // race-safety pattern as everything else here, since two purchases could land close together.
+  const eBuys = existing.cardPurchases || {};
+  const iBuys = incoming.cardPurchases || {};
+  const allBuyerIds = new Set([...Object.keys(eBuys), ...Object.keys(iBuys)]);
+  const mergedBuys = {};
+  allBuyerIds.forEach(pid => { mergedBuys[pid] = Math.max(eBuys[pid] || 0, iBuys[pid] || 0); });
+  merged.cardPurchases = mergedBuys;
 
   return merged;
 }
@@ -232,6 +271,63 @@ app.post('/slack', async (req, res) => {
   } catch (err) {
     console.error('[SLACK] Error:', err);
     res.status(500).json({ error: String(err.message) });
+  }
+});
+
+// ─── MARCUS POINTS → BUY EXTRA CARD ────────────────────────────────────────────
+// GET /points-balance?slackUserId=... — proxies Marcus's balance endpoint so the
+// frontend never needs Marcus's URL/secret directly.
+app.get('/points-balance', async (req, res) => {
+  try {
+    if (!MARCUS_BASE_URL || !MARCUS_SECRET) {
+      return res.status(503).json({ error: 'Marcus integration not configured on this server' });
+    }
+    const { slackUserId } = req.query;
+    if (!slackUserId) return res.status(400).json({ error: 'slackUserId required' });
+    const r = await fetch(`${MARCUS_BASE_URL}/api/points/balance?userId=${encodeURIComponent(slackUserId)}`, {
+      headers: { Authorization: `Bearer ${MARCUS_SECRET}` },
+    });
+    const j = await r.json();
+    res.status(r.status).json(j);
+  } catch (e) {
+    console.error('[POINTS-BALANCE] Error:', e);
+    res.status(500).json({ error: String(e.message) });
+  }
+});
+
+// POST /buy-card { playerId, slackUserId } — enforces the 3-purchases-per-shift cap here
+// (server-side, can't be bypassed from the browser), then spends 5 points via Marcus.
+app.post('/buy-card', async (req, res) => {
+  try {
+    if (!MARCUS_BASE_URL || !MARCUS_SECRET) {
+      return res.status(503).json({ error: 'Marcus integration not configured on this server' });
+    }
+    const { playerId, slackUserId } = req.body || {};
+    if (!playerId || !slackUserId) return res.status(400).json({ error: 'playerId and slackUserId required' });
+    if (!DB.game || !DB.game.active) return res.status(400).json({ error: 'No active game' });
+
+    const purchases = DB.game.cardPurchases || {};
+    const already = purchases[playerId] || 0;
+    if (already >= MAX_PURCHASED_CARDS_PER_SHIFT) {
+      return res.status(400).json({ error: `Max ${MAX_PURCHASED_CARDS_PER_SHIFT} purchased cards per shift reached` });
+    }
+
+    const spendResp = await fetch(`${MARCUS_BASE_URL}/api/points/spend`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${MARCUS_SECRET}` },
+      body: JSON.stringify({ userId: slackUserId, amount: POINTS_PER_CARD }),
+    });
+    const spendResult = await spendResp.json();
+    if (!spendResp.ok || !spendResult.success) {
+      return res.status(400).json({ error: 'Not enough points or Marcus unavailable', detail: spendResult });
+    }
+
+    DB.game.cardPurchases = { ...purchases, [playerId]: already + 1 };
+    saveState(DB);
+    res.json({ ok: true, newTotal: spendResult.newTotal, purchasesThisShift: already + 1 });
+  } catch (e) {
+    console.error('[BUY-CARD] Error:', e);
+    res.status(500).json({ error: String(e.message) });
   }
 });
 
