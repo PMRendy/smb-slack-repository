@@ -232,7 +232,29 @@ app.post('/state/merge', (req, res) => {
       mergedGame = mergeGameState(DB.game, incoming.game);
     }
 
-    DB = { ...DB, ...incoming, game: mergedGame, updatedAt: Date.now() };
+    // markUpdate (2026-07-18 fix): a one-shot explicit patch for a single mark/unmark
+    // action — { playerId, cardIndex, cellIndex, mark }. playerMarks is normally
+    // union-merged above so nobody's marks are ever silently dropped by a stale save,
+    // but that also meant a deletion (unmarking a cell) could never survive the union
+    // (the old "marked" entry would just get merged back in). Applying this patch
+    // AFTER the union merge, as the final step, guarantees this specific action
+    // (including unmarks) always takes effect, while every other cell/player stays
+    // protected by the normal union-merge safety net above.
+    const mu = incoming.markUpdate;
+    if (mu && mergedGame && mu.playerId != null && mu.cardIndex != null && mu.cellIndex != null) {
+      if (!mergedGame.playerMarks) mergedGame.playerMarks = {};
+      if (!mergedGame.playerMarks[mu.playerId]) mergedGame.playerMarks[mu.playerId] = {};
+      if (!mergedGame.playerMarks[mu.playerId][mu.cardIndex]) mergedGame.playerMarks[mu.playerId][mu.cardIndex] = {};
+      const cellKey = String(mu.cellIndex);
+      if (mu.mark) {
+        mergedGame.playerMarks[mu.playerId][mu.cardIndex][cellKey] = mu.mark;
+      } else {
+        delete mergedGame.playerMarks[mu.playerId][mu.cardIndex][cellKey];
+      }
+    }
+
+    const { markUpdate, ...incomingWithoutPatch } = incoming; // never persist the transient patch field itself
+    DB = { ...DB, ...incomingWithoutPatch, game: mergedGame, updatedAt: Date.now() };
     saveState(DB);
     res.json({ ok: true, updatedAt: DB.updatedAt, game: DB.game });
   } catch (e) {
